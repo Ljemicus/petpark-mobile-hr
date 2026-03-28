@@ -45,7 +45,7 @@ const mockNotifications: AppNotification[] = [
   {
     id: '5',
     title: 'Posebna ponuda!',
-    body: '20% popusta na sve proizvode za njegu ovaj vikend! Iskoristite kod: SAPICA20',
+    body: '20% popusta na sve proizvode za njegu ovaj vikend! Iskoristite kod: PETPARK20',
     type: 'promo',
     read: true,
     timestamp: new Date(2026, 2, 25, 12, 0),
