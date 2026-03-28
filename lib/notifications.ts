@@ -73,7 +73,7 @@ export function markAllAsRead(): void {
 }
 
 export function showMockNotification(
-  title: string = 'Šapica',
+  title: string = 'PetPark',
   body: string = 'Imate novu obavijest! 🐾'
 ): void {
   Alert.alert(title, body, [{ text: 'U redu', style: 'default' }]);

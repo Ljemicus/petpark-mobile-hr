@@ -71,7 +71,7 @@ const lostPets: LostPet[] = [
     name: 'Luna',
     type: 'Mačka',
     breed: 'Sijamska',
-    color: 'Krem s tamnim šapicama',
+    color: 'Krem s tamnim petparkma',
     location: 'Osijek, Tvrđa',
     date: '25.03.2026.',
     description: 'Sijamska mačka, plave oči, sterilizirana. Čipirana.',
@@ -111,7 +111,7 @@ export default function LostPetsScreen() {
     const statusText = pet.status === 'lost' ? 'IZGUBLJEN' : 'PRONAĐEN';
     try {
       await Share.share({
-        message: `🚨 ${statusText}: ${pet.name} (${pet.type})\n📍 ${pet.location}\n📅 ${pet.date}\n${pet.description}\n📞 Kontakt: ${pet.contact}\n\n— Šapica App 🐾`,
+        message: `🚨 ${statusText}: ${pet.name} (${pet.type})\n📍 ${pet.location}\n📅 ${pet.date}\n${pet.description}\n📞 Kontakt: ${pet.contact}\n\n— PetPark App 🐾`,
       });
     } catch {
       Alert.alert('Greška', 'Dijeljenje nije uspjelo.');

@@ -29,7 +29,7 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <View style={styles.hero}>
-          <Text style={styles.logo}>🐾 Šapica</Text>
+          <Text style={styles.logo}>🐾 PetPark</Text>
           <Text style={styles.heroTitle}>Pronađi savršenog{'\n'}sittera za ljubimca</Text>
           <Text style={styles.heroSubtitle}>Marketplace za pet sitting u Hrvatskoj</Text>
           <View style={styles.searchContainer}>

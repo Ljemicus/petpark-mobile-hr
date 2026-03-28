@@ -110,7 +110,7 @@ export default function ProfileScreen() {
           <Ionicons name="document-text-outline" size={18} color={Colors.muted} />
           <Text style={styles.footerLinkText}>Uvjeti korištenja</Text>
         </TouchableOpacity>
-        <Text style={styles.footerVersion}>Šapica v1.0.0</Text>
+        <Text style={styles.footerVersion}>PetPark v1.0.0</Text>
       </View>
 
       <View style={{ height: 40 }} />

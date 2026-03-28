@@ -63,7 +63,7 @@ export default function TabLayout() {
         options={{
           title: 'Shop',
           tabBarIcon: ({ color, size }) => <CartTabIcon color={color} size={size} />,
-          headerTitle: 'Šapica Shop',
+          headerTitle: 'PetPark Shop',
         }}
       />
       <Tabs.Screen

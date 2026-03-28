@@ -38,7 +38,7 @@ function getTime(): string {
 
 export default function MessagesScreen() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: 'Dobrodošli u Šapica chat! 🐾\nKako vam možemo pomoći?', sender: 'bot', timestamp: getTime() },
+    { id: '1', text: 'Dobrodošli u PetPark chat! 🐾\nKako vam možemo pomoći?', sender: 'bot', timestamp: getTime() },
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);

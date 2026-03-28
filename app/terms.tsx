@@ -10,13 +10,13 @@ export default function TermsScreen() {
 
       <Text style={styles.heading}>1. Prihvaćanje uvjeta</Text>
       <Text style={styles.body}>
-        Korištenjem mobilne aplikacije Šapica pristajete na ove Uvjete korištenja. Ako se ne slažete
+        Korištenjem mobilne aplikacije PetPark pristajete na ove Uvjete korištenja. Ako se ne slažete
         s ovim uvjetima, molimo vas da ne koristite aplikaciju.
       </Text>
 
       <Text style={styles.heading}>2. Opis usluge</Text>
       <Text style={styles.body}>
-        Šapica je platforma koja povezuje vlasnike kućnih ljubimaca s pružateljima usluga za ljubimce,
+        PetPark je platforma koja povezuje vlasnike kućnih ljubimaca s pružateljima usluga za ljubimce,
         uključujući:{'\n\n'}
         • Pet sitting — čuvanje i njega ljubimaca{'\n'}
         • Grooming — usluge uljepšavanja{'\n'}
@@ -47,7 +47,7 @@ export default function TermsScreen() {
 
       <Text style={styles.heading}>5. Usluge pet sittera</Text>
       <Text style={styles.body}>
-        Šapica djeluje kao posrednik između vlasnika i pet sittera. Ne snosimo odgovornost za:{'\n\n'}
+        PetPark djeluje kao posrednik između vlasnika i pet sittera. Ne snosimo odgovornost za:{'\n\n'}
         • Kvalitetu usluge pojedinog sittera{'\n'}
         • Štetu nastalu za vrijeme čuvanja{'\n'}
         • Sporove između korisnika{'\n\n'}
@@ -56,13 +56,13 @@ export default function TermsScreen() {
 
       <Text style={styles.heading}>6. Kupovina u Shopu</Text>
       <Text style={styles.body}>
-        Svi proizvodi u Šapica Shopu podliježu Zakonu o zaštiti potrošača. Imate pravo na
+        Svi proizvodi u PetPark Shopu podliježu Zakonu o zaštiti potrošača. Imate pravo na
         povrat proizvoda u roku od 14 dana od primitka, u skladu s uvjetima povrata.
       </Text>
 
       <Text style={styles.heading}>7. Intelektualno vlasništvo</Text>
       <Text style={styles.body}>
-        Sav sadržaj aplikacije (tekstovi, slike, logo, dizajn) vlasništvo je tvrtke Šapica d.o.o.
+        Sav sadržaj aplikacije (tekstovi, slike, logo, dizajn) vlasništvo je tvrtke PetPark d.o.o.
         i zaštićen je zakonom o autorskim pravima. Nije dopušteno kopiranje ili distribucija
         bez pisanog odobrenja.
       </Text>
@@ -88,11 +88,11 @@ export default function TermsScreen() {
       <Text style={styles.heading}>11. Kontakt</Text>
       <Text style={styles.body}>
         Za pitanja o uvjetima korištenja:{'\n\n'}
-        E-mail: info@sapica.hr{'\n'}
-        Adresa: Šapica d.o.o., Ilica 100, 10000 Zagreb, Hrvatska
+        E-mail: info@petpark.hr{'\n'}
+        Adresa: PetPark d.o.o., Ilica 100, 10000 Zagreb, Hrvatska
       </Text>
 
-      <Text style={styles.footer}>© 2026 Šapica d.o.o. Sva prava pridržana.</Text>
+      <Text style={styles.footer}>© 2026 PetPark d.o.o. Sva prava pridržana.</Text>
     </ScrollView>
   );
 }

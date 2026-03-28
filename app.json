@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "sapica-mobile",
-    "slug": "sapica-mobile",
+    "name": "petpark-mobile",
+    "slug": "petpark-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -26,7 +26,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "sapica",
+    "scheme": "petpark",
     "plugins": [
       "expo-router"
     ]

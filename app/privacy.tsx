@@ -10,9 +10,9 @@ export default function PrivacyScreen() {
 
       <Text style={styles.heading}>1. Uvod</Text>
       <Text style={styles.body}>
-        Šapica d.o.o. („mi", „nas" ili „naš") posvećena je zaštiti vaše privatnosti. Ova Politika privatnosti
+        PetPark d.o.o. („mi", „nas" ili „naš") posvećena je zaštiti vaše privatnosti. Ova Politika privatnosti
         objašnjava kako prikupljamo, koristimo, otkrivamo i štitimo vaše osobne podatke kada koristite našu
-        mobilnu aplikaciju Šapica i povezane usluge.
+        mobilnu aplikaciju PetPark i povezane usluge.
       </Text>
 
       <Text style={styles.heading}>2. Podaci koje prikupljamo</Text>
@@ -70,11 +70,11 @@ export default function PrivacyScreen() {
       <Text style={styles.heading}>8. Kontakt</Text>
       <Text style={styles.body}>
         Za sva pitanja vezana uz privatnost, kontaktirajte nas:{'\n\n'}
-        E-mail: privatnost@sapica.hr{'\n'}
-        Adresa: Šapica d.o.o., Ilica 100, 10000 Zagreb, Hrvatska
+        E-mail: privatnost@petpark.hr{'\n'}
+        Adresa: PetPark d.o.o., Ilica 100, 10000 Zagreb, Hrvatska
       </Text>
 
-      <Text style={styles.footer}>© 2026 Šapica d.o.o. Sva prava pridržana.</Text>
+      <Text style={styles.footer}>© 2026 PetPark d.o.o. Sva prava pridržana.</Text>
     </ScrollView>
   );
 }

@@ -36,7 +36,7 @@ export default function RegisterScreen() {
 
   const handleSocialRegister = async () => {
     setLoading(true);
-    await login(email || 'demo@sapica.hr', 'demo');
+    await login(email || 'demo@petpark.hr', 'demo');
     setLoading(false);
     router.back();
   };
@@ -46,7 +46,7 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.emoji}>🐾</Text>
         <Text style={styles.title}>Registracija</Text>
-        <Text style={styles.subtitle}>Kreirajte svoj Šapica račun</Text>
+        <Text style={styles.subtitle}>Kreirajte svoj PetPark račun</Text>
 
         {/* Role selection */}
         <View style={styles.roleSelector}>
