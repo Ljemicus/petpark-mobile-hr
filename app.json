@@ -12,7 +12,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "hr.petpark.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +22,9 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "hr.petpark.app",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,6 +32,14 @@
     "scheme": "petpark",
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "69966cad-5bd8-446e-a104-198c2c15de6d"
+      }
+    },
+    "owner": "ljemicus",
+    "sdkVersion": "55.0.0"
   }
 }
