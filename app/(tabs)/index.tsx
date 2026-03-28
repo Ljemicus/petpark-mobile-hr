@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
-import { sitters, products, quickActions } from '../../lib/mock-data';
+import { Sitter, products, quickActions } from '../../lib/mock-data';
+import { getSitters } from '../../lib/db';
 import SearchBar from '../../components/SearchBar';
 import SitterCard from '../../components/SitterCard';
 import ProductCard from '../../components/ProductCard';
@@ -12,6 +13,16 @@ import ProductCard from '../../components/ProductCard';
 export default function HomeScreen() {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const [featuredSitters, setFeaturedSitters] = useState<Sitter[]>([]);
+  const [loadingSitters, setLoadingSitters] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const data = await getSitters();
+      setFeaturedSitters(data.slice(0, 6));
+      setLoadingSitters(false);
+    })();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -56,15 +67,19 @@ export default function HomeScreen() {
               <Text style={styles.seeAll}>Vidi sve</Text>
             </TouchableOpacity>
           </View>
-          <FlatList
-            horizontal
-            data={sitters.slice(0, 6)}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <SitterCard sitter={item} horizontal />}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-            scrollEnabled={true}
-          />
+          {loadingSitters ? (
+            <ActivityIndicator size="small" color={Colors.primary} style={{ marginVertical: 20 }} />
+          ) : (
+            <FlatList
+              horizontal
+              data={featuredSitters}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <SitterCard sitter={item} horizontal />}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+              scrollEnabled={true}
+            />
+          )}
         </View>
 
         {/* New in Shop */}

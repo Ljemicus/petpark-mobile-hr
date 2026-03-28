@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../lib/colors';
@@ -11,10 +11,21 @@ export default function LoginScreen() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    login(email);
-    router.back();
+  const handleLogin = async () => {
+    if (!email.trim()) {
+      Alert.alert('Greška', 'Unesite email adresu.');
+      return;
+    }
+    setLoading(true);
+    const { success, error } = await login(email, password);
+    setLoading(false);
+    if (success) {
+      router.back();
+    } else if (error) {
+      Alert.alert('Greška', error);
+    }
   };
 
   return (
@@ -54,7 +65,7 @@ export default function LoginScreen() {
             <Text style={styles.forgot}>Zaboravljena lozinka?</Text>
           </TouchableOpacity>
 
-          <Button title="Prijavi se" onPress={handleLogin} size="large" style={{ width: '100%', marginTop: 8 }} />
+          <Button title={loading ? 'Prijava...' : 'Prijavi se'} onPress={handleLogin} size="large" style={{ width: '100%', marginTop: 8 }} />
         </View>
 
         <View style={styles.socialDivider}>

@@ -1,16 +1,34 @@
-import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
-import { sitters } from '../../lib/mock-data';
+import { Sitter } from '../../lib/mock-data';
+import { getSitterById } from '../../lib/db';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
 
 export default function SitterDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const sitter = sitters.find((s) => s.id === id);
+  const [sitter, setSitter] = useState<Sitter | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const data = await getSitterById(id!);
+      setSitter(data);
+      setLoading(false);
+    })();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   if (!sitter) {
     return (

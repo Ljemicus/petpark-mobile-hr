@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../lib/colors';
@@ -8,14 +8,36 @@ import Button from '../components/Button';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { register, login } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'vlasnik' | 'sitter'>('vlasnik');
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
-    login(email);
+  const handleRegister = async () => {
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      Alert.alert('Greška', 'Popunite sva polja.');
+      return;
+    }
+    if (password.length < 8) {
+      Alert.alert('Greška', 'Lozinka mora imati minimalno 8 znakova.');
+      return;
+    }
+    setLoading(true);
+    const { success, error } = await register(email, password, name);
+    setLoading(false);
+    if (success) {
+      router.back();
+    } else if (error) {
+      Alert.alert('Greška', error);
+    }
+  };
+
+  const handleSocialRegister = async () => {
+    setLoading(true);
+    await login(email || 'demo@sapica.hr', 'demo');
+    setLoading(false);
     router.back();
   };
 
@@ -81,7 +103,7 @@ export default function RegisterScreen() {
             />
           </View>
 
-          <Button title="Registriraj se" onPress={handleRegister} size="large" style={{ width: '100%', marginTop: 8 }} />
+          <Button title={loading ? 'Registracija...' : 'Registriraj se'} onPress={handleRegister} size="large" style={{ width: '100%', marginTop: 8 }} />
         </View>
 
         <View style={styles.socialDivider}>
@@ -91,15 +113,15 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.socialButtons}>
-          <TouchableOpacity style={styles.socialButton} onPress={handleRegister}>
+          <TouchableOpacity style={styles.socialButton} onPress={handleSocialRegister}>
             <Ionicons name="logo-apple" size={22} color={Colors.text} />
             <Text style={styles.socialText}>Apple</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton} onPress={handleRegister}>
+          <TouchableOpacity style={styles.socialButton} onPress={handleSocialRegister}>
             <Ionicons name="logo-google" size={22} color="#DB4437" />
             <Text style={styles.socialText}>Google</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton} onPress={handleRegister}>
+          <TouchableOpacity style={styles.socialButton} onPress={handleSocialRegister}>
             <Ionicons name="logo-facebook" size={22} color="#4267B2" />
             <Text style={styles.socialText}>Facebook</Text>
           </TouchableOpacity>

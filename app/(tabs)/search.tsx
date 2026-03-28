@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { View, FlatList, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, FlatList, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors } from '../../lib/colors';
-import { sitters } from '../../lib/mock-data';
+import { Sitter } from '../../lib/mock-data';
+import { getSitters } from '../../lib/db';
 import SearchBar from '../../components/SearchBar';
 import SitterCard from '../../components/SitterCard';
 
@@ -10,14 +11,19 @@ const cities = ['Svi', 'Zagreb', 'Split', 'Rijeka', 'Osijek'];
 export default function SearchScreen() {
   const [search, setSearch] = useState('');
   const [selectedCity, setSelectedCity] = useState('Svi');
+  const [sittersList, setSittersList] = useState<Sitter[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = useMemo(() => {
-    return sitters.filter((s) => {
-      const matchesCity = selectedCity === 'Svi' || s.city === selectedCity;
-      const matchesSearch = !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.services.some((svc) => svc.toLowerCase().includes(search.toLowerCase()));
-      return matchesCity && matchesSearch;
-    });
-  }, [search, selectedCity]);
+  const loadSitters = useCallback(async () => {
+    setLoading(true);
+    const data = await getSitters({ city: selectedCity, search: search || undefined });
+    setSittersList(data);
+    setLoading(false);
+  }, [selectedCity, search]);
+
+  useEffect(() => {
+    loadSitters();
+  }, [loadSitters]);
 
   return (
     <View style={styles.container}>
@@ -39,19 +45,25 @@ export default function SearchScreen() {
         ))}
       </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <SitterCard sitter={item} />}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>🔍</Text>
-            <Text style={styles.emptyText}>Nema rezultata</Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={styles.empty}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={sittersList}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <SitterCard sitter={item} />}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyEmoji}>🔍</Text>
+              <Text style={styles.emptyText}>Nema rezultata</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
