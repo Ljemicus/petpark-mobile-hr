@@ -70,8 +70,8 @@ export default function PrivacyScreen() {
       <Text style={styles.heading}>8. Kontakt</Text>
       <Text style={styles.body}>
         Za sva pitanja vezana uz privatnost, kontaktirajte nas:{'\n\n'}
-        E-mail: privatnost@petpark.hr{'\n'}
-        Adresa: PetPark d.o.o., Ilica 100, 10000 Zagreb, Hrvatska
+        E-mail: petparkhr@gmail.com{'\n'}
+        Web: petpark.hr
       </Text>
 
       <Text style={styles.footer}>© 2026 PetPark d.o.o. Sva prava pridržana.</Text>
