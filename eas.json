@@ -28,9 +28,10 @@
       "ios": {
         "appleId": "ljemicus@icloud.com",
         "appleTeamId": "WU2JPA6AY5",
-        "ascApiKeyId": "68B72S9FAN",
+        "ascApiKeyId": "VLUNPFSGAD",
         "ascApiKeyIssuerId": "19908cd6-e848-4824-8ff8-6ac68f87c429",
-        "ascApiKeyPath": "./credentials/AuthKey_68B72S9FAN.p8"
+        "ascApiKeyPath": "./credentials/AuthKey_VLUNPFSGAD.p8",
+        "ascAppId": "6761323834"
       },
       "android": {
         "track": "production"
