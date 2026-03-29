@@ -89,6 +89,8 @@ export default function TermsScreen() {
       <Text style={styles.body}>
         Za pitanja o uvjetima korištenja:{'\n\n'}
         E-mail: petparkhr@gmail.com{'\n'}
+        Telefon: +385 91 567 6202{'\n'}
+        Adresa: Rijeka, Hrvatska{'\n'}
         Web: petpark.hr
       </Text>
 
