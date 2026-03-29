@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,7 +29,10 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <View style={styles.hero}>
-          <Text style={styles.logo}>🐾 PetPark</Text>
+          <View style={styles.logoRow}>
+            <Image source={require('../../assets/logo-small.png')} style={styles.logoImage} />
+            <Text style={styles.logo}>PetPark</Text>
+          </View>
           <Text style={styles.heroTitle}>Pronađi savršenog{'\n'}sittera za ljubimca</Text>
           <Text style={styles.heroSubtitle}>Marketplace za pet sitting u Hrvatskoj</Text>
           <View style={styles.searchContainer}>
@@ -191,11 +194,21 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  logoImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+  },
   logo: {
     fontSize: 20,
     fontWeight: '800',
     color: Colors.primary,
-    marginBottom: 12,
   },
   heroTitle: {
     fontSize: 28,
