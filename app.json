@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "petpark-mobile",
+    "name": "PetPark",
     "slug": "petpark-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "hr.petpark.app"
+      "bundleIdentifier": "hr.ljemicus.petpark",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "3"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +27,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "hr.petpark.app",
+      "package": "hr.ljemicus.petpark",
       "versionCode": 1
     },
     "web": {
@@ -31,7 +35,8 @@
     },
     "scheme": "petpark",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font"
     ],
     "extra": {
       "router": {},
