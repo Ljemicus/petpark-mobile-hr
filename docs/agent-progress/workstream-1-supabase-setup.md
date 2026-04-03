@@ -45,3 +45,14 @@
 - Run migrations against the live Supabase project.
 - Build admin verification flow (approve/reject sitters, read verification-documents via service_role).
 - Consider adding `supabase/config.toml` for local dev if the team wants `supabase start` support.
+
+### Update — RLS hardening follow-up
+- Added `supabase/migrations/00005_lock_verification_fields.sql`.
+- This closes the remaining self-verification gap found in sanity review.
+- The migration adds a DB trigger on `public.sitter_profiles` that blocks self-updates to:
+  - `verified`
+  - `verification_status`
+  - `verification_notes`
+  - `verification_documents`
+  - `admin_notes`
+- Result: sitters can still edit normal profile fields, but cannot mark themselves verified through direct client-side Supabase calls.
