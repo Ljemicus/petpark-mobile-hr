@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
@@ -21,7 +21,7 @@ export default function ProfileScreen() {
       <View style={styles.container}>
         <View style={styles.guestContainer}>
           <Text style={styles.guestEmoji}>🐾</Text>
-          <Text style={styles.guestTitle}>Dobrodošli u Šapicu!</Text>
+          <Text style={styles.guestTitle}>Dobrodošli u PetPark!</Text>
           <Text style={styles.guestSubtitle}>Prijavite se za pristup svim funkcionalnostima</Text>
 
           <View style={styles.authButtons}>
@@ -36,15 +36,15 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.socialButtons}>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
               <Ionicons name="logo-apple" size={24} color={Colors.text} />
               <Text style={styles.socialText}>Apple</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
               <Ionicons name="logo-google" size={24} color="#DB4437" />
               <Text style={styles.socialText}>Google</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
               <Ionicons name="logo-facebook" size={24} color="#4267B2" />
               <Text style={styles.socialText}>Facebook</Text>
             </TouchableOpacity>

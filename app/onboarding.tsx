@@ -68,7 +68,7 @@ const sitterServices: { value: SitterService; label: string; emoji: string }[] =
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding, user } = useAuth();
+  const { completeOnboarding, skipOnboarding, user } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<FormState>({
@@ -241,13 +241,15 @@ export default function OnboardingScreen() {
               return item.uploadedUrl ?? item.uri;
             }
 
-            const extension = item.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'jpg';
+            const lower = item.name.toLowerCase();
+            const extension = lower.endsWith('.pdf') ? 'pdf' : lower.endsWith('.png') ? 'png' : lower.endsWith('.heic') ? 'heic' : 'jpg';
+            const contentTypes: Record<string, string> = { pdf: 'application/pdf', png: 'image/png', heic: 'image/heic', jpg: 'image/jpeg' };
 
             return safeUpload({
               bucket: 'verification-documents',
               path: `${user.id}/document-${index + 1}.${extension}`,
               uri: item.uri,
-              contentType: extension === 'pdf' ? 'application/pdf' : 'image/jpeg',
+              contentType: contentTypes[extension],
             });
           })
         );
@@ -641,7 +643,7 @@ export default function OnboardingScreen() {
             disabled={loading}
           />
           {step < TOTAL_STEPS ? (
-            <TouchableOpacity onPress={() => router.replace('/(tabs)')}>
+            <TouchableOpacity onPress={() => { skipOnboarding(); router.replace('/(tabs)'); }}>
               <Text style={styles.skipText}>Preskoči za sad</Text>
             </TouchableOpacity>
           ) : null}

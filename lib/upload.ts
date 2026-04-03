@@ -49,6 +49,26 @@ export async function uploadToSupabaseStorage(options: {
 }
 
 /**
+ * Create a short-lived signed URL for a private storage object.
+ * Returns null if the operation fails (e.g. missing permissions).
+ */
+export async function getSignedUrl(
+  bucket: string,
+  path: string,
+  expiresInSeconds = 3600,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, expiresInSeconds);
+    if (error) throw error;
+    return data.signedUrl;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Safe wrapper: returns the public URL on success, or null if the upload
  * fails for any reason (missing bucket, network error, permissions, etc.).
  */

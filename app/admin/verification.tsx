@@ -19,8 +19,15 @@ import {
   setSitterVerification,
   PendingSitter,
 } from '../../lib/db';
+import { useAuth } from '../../lib/auth-context';
+import { getSignedUrl } from '../../lib/upload';
+
+const ADMIN_EMAILS = ['petparkhr@gmail.com'];
 
 export default function AdminVerificationScreen() {
+  const { isLoggedIn, user } = useAuth();
+  const isAdmin = isLoggedIn && !!user && ADMIN_EMAILS.includes(user.email);
+
   const [sitters, setSitters] = useState<PendingSitter[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,13 +36,28 @@ export default function AdminVerificationScreen() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchQueue = useCallback(async () => {
+    if (!isAdmin) return;
     const data = await getPendingSitters();
     setSitters(data);
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
+    if (!isAdmin) {
+      setLoading(false);
+      return;
+    }
     fetchQueue().finally(() => setLoading(false));
-  }, [fetchQueue]);
+  }, [fetchQueue, isAdmin]);
+
+  if (!isAdmin) {
+    return (
+      <View style={styles.center}>
+        <Ionicons name="lock-closed" size={64} color={Colors.error} />
+        <Text style={styles.emptyTitle}>Pristup odbijen</Text>
+        <Text style={styles.emptySubtitle}>Samo ovlašteni administratori mogu pristupiti ovoj stranici.</Text>
+      </View>
+    );
+  }
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -72,13 +94,26 @@ export default function AdminVerificationScreen() {
     setProcessingId(null);
   };
 
+  const openDocument = async (url: string) => {
+    // Try to extract the storage path and create a signed URL for private docs
+    const verDocsMatch = url.match(/verification-documents\/(.+)$/);
+    if (verDocsMatch) {
+      const signed = await getSignedUrl('verification-documents', verDocsMatch[1]);
+      if (signed) {
+        Linking.openURL(signed);
+        return;
+      }
+    }
+    Linking.openURL(url);
+  };
+
   const renderDocument = (url: string, index: number) => {
     const isPdf = url.toLowerCase().endsWith('.pdf');
     return (
       <TouchableOpacity
         key={index}
         style={styles.docChip}
-        onPress={() => Linking.openURL(url)}
+        onPress={() => openDocument(url)}
       >
         <Ionicons
           name={isPdf ? 'document-text' : 'image'}
@@ -219,7 +254,7 @@ export default function AdminVerificationScreen() {
       <View style={styles.banner}>
         <Ionicons name="shield-checkmark" size={18} color="#92400E" />
         <Text style={styles.bannerText}>
-          Interni admin prikaz — bez autentifikacije. Samo za ovlaštene osobe.
+          Interni admin prikaz — samo za ovlaštene osobe.
         </Text>
       </View>
 

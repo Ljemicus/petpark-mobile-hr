@@ -36,6 +36,12 @@ export async function getSitters(filters?: SitterFilters): Promise<Sitter[]> {
       query = query.eq('users.city', filters.city);
     }
 
+    if (filters?.search) {
+      query = query.or(
+        `bio.ilike.%${filters.search}%,users.full_name.ilike.%${filters.search}%`
+      );
+    }
+
     const { data, error } = await query;
 
     if (error) throw error;

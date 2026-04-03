@@ -8,7 +8,7 @@ import Button from '../components/Button';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, login } = useAuth();
+  const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,11 +34,8 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleSocialRegister = async () => {
-    setLoading(true);
-    await login(email || 'demo@petpark.hr', 'demo');
-    setLoading(false);
-    router.replace('/onboarding');
+  const handleSocialRegister = () => {
+    Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.');
   };
 
   return (

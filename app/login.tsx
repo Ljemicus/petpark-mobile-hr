@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../lib/colors';
@@ -33,7 +34,7 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <Text style={styles.emoji}>🐾</Text>
         <Text style={styles.title}>Prijava</Text>
-        <Text style={styles.subtitle}>Dobrodošli natrag u Šapicu!</Text>
+        <Text style={styles.subtitle}>Dobrodošli natrag u PetPark!</Text>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
@@ -75,15 +76,15 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.socialButtons}>
-          <TouchableOpacity style={styles.socialButton} onPress={handleLogin}>
+          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
             <Ionicons name="logo-apple" size={22} color={Colors.text} />
             <Text style={styles.socialText}>Apple</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton} onPress={handleLogin}>
+          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
             <Ionicons name="logo-google" size={22} color="#DB4437" />
             <Text style={styles.socialText}>Google</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton} onPress={handleLogin}>
+          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
             <Ionicons name="logo-facebook" size={22} color="#4267B2" />
             <Text style={styles.socialText}>Facebook</Text>
           </TouchableOpacity>

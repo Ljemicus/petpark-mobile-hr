@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, users } from './mock-data';
+import { User } from './mock-data';
 import { supabase } from './supabase';
 import type { Session } from '@supabase/supabase-js';
 
@@ -30,6 +30,7 @@ interface AuthContextType {
     city: string;
     onboarding?: OnboardingData;
   }) => Promise<void>;
+  skipOnboarding: () => void;
   logout: () => Promise<void>;
   isLoggedIn: boolean;
   loading: boolean;
@@ -42,6 +43,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => ({ success: false }),
   register: async () => ({ success: false }),
   completeOnboarding: async () => {},
+  skipOnboarding: () => {},
   logout: async () => {},
   isLoggedIn: false,
   loading: true,
@@ -99,17 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       return { success: true };
     } catch (err: any) {
-      // Mock fallback
-      const found = users.find((u) => u.email === email);
-      if (found) {
-        setUser(found);
-        setNeedsOnboarding(false);
-        return { success: true };
-      }
-      // Demo: prijavi kao prvog korisnika
-      setUser(users[0]);
-      setNeedsOnboarding(false);
-      return { success: true };
+      return { success: false, error: err.message ?? 'Prijava nije uspjela.' };
     }
   };
 
@@ -123,10 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       return { success: true };
     } catch (err: any) {
-      // Mock fallback
-      setUser({ id: 'new', name, email, avatar: role === 'sitter' ? '🤝' : '🐾', role, city: 'Rijeka' });
-      setNeedsOnboarding(true);
-      return { success: true };
+      return { success: false, error: err.message ?? 'Registracija nije uspjela.' };
     }
   };
 
@@ -176,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               services: onboarding.services ?? [],
               price_per_hour: onboarding.pricePerHour ?? 0,
               avatar: avatar,
-              verified: onboarding.verificationStatus === 'pending',
+              verified: false,
               has_yard: onboarding.hasYard ?? false,
               verification_status: onboarding.verificationStatus ?? 'none',
               verification_notes: onboarding.verificationNotes ?? null,
@@ -186,8 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setNeedsOnboarding(false);
       }
-    } catch {
-      // fallback is local state below
+    } catch (err: any) {
+      console.warn('completeOnboarding: Supabase save failed, using local state only:', err?.message);
     }
 
     setUser((prev) => ({
@@ -198,6 +187,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: data.role,
       city: data.city,
     }));
+    setNeedsOnboarding(false);
+  };
+
+  const skipOnboarding = () => {
     setNeedsOnboarding(false);
   };
 
@@ -213,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, login, register, completeOnboarding, logout, isLoggedIn: !!user, loading, needsOnboarding }}>
+    <AuthContext.Provider value={{ user, session, login, register, completeOnboarding, skipOnboarding, logout, isLoggedIn: !!user, loading, needsOnboarding }}>
       {children}
     </AuthContext.Provider>
   );
