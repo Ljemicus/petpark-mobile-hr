@@ -118,6 +118,78 @@ export async function getProducts(): Promise<Product[]> {
   return mockProducts;
 }
 
+// ─── Admin: Verification Queue ───────────────────────────────────────
+
+export interface PendingSitter {
+  id: string;
+  name: string;
+  city: string;
+  avatar: string;
+  verificationStatus: string;
+  verificationNotes: string;
+  verificationDocuments: string[];
+  submittedAt: string | null;
+}
+
+export async function getPendingSitters(): Promise<PendingSitter[]> {
+  try {
+    const { data, error } = await supabase
+      .from('sitter_profiles')
+      .select(`
+        id,
+        avatar,
+        verification_status,
+        verification_notes,
+        verification_documents,
+        created_at,
+        users!inner (
+          full_name,
+          city
+        )
+      `)
+      .eq('verification_status', 'pending');
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    return data.map((row: any) => ({
+      id: row.id,
+      name: row.users.full_name,
+      city: row.users.city,
+      avatar: row.avatar ?? '',
+      verificationStatus: row.verification_status ?? 'pending',
+      verificationNotes: row.verification_notes ?? '',
+      verificationDocuments: row.verification_documents ?? [],
+      submittedAt: row.created_at ?? null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function setSitterVerification(
+  sitterId: string,
+  approved: boolean,
+  adminNotes?: string,
+): Promise<boolean> {
+  try {
+    const status = approved ? 'verified' : 'rejected';
+    const { error } = await supabase
+      .from('sitter_profiles')
+      .update({
+        verification_status: status,
+        verified: approved,
+        ...(adminNotes ? { admin_notes: adminNotes } : {}),
+      })
+      .eq('id', sitterId);
+
+    if (error) throw error;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Forum ostaje mock (Supabase nema te tablice još)
 export async function getForumTopics(): Promise<ForumTopic[]> {
   return mockForumTopics;

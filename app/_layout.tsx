@@ -33,6 +33,7 @@ export default function RootLayout() {
               <Stack.Screen name="login" options={{ title: 'Prijava', presentation: 'modal' }} />
               <Stack.Screen name="register" options={{ title: 'Registracija', presentation: 'modal' }} />
               <Stack.Screen name="onboarding" options={{ title: 'Onboarding', headerShown: false }} />
+              <Stack.Screen name="admin/verification" options={{ title: 'Verifikacija sittera' }} />
             </Stack>
           </OnboardingGate>
         </CartProvider>
