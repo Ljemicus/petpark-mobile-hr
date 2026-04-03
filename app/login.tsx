@@ -8,7 +8,7 @@ import Button from '../components/Button';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, needsOnboarding } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ export default function LoginScreen() {
     const { success, error } = await login(email, password);
     setLoading(false);
     if (success) {
-      router.back();
+      router.replace(needsOnboarding ? '/onboarding' : '/(tabs)');
     } else if (error) {
       Alert.alert('Greška', error);
     }

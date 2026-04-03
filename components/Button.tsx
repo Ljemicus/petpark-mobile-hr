@@ -1,5 +1,12 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+  StyleProp,
+} from 'react-native';
 import { Colors } from '../lib/colors';
 
 interface ButtonProps {
@@ -7,10 +14,22 @@ interface ButtonProps {
   onPress: () => void;
   variant?: 'primary' | 'outline' | 'ghost';
   size?: 'small' | 'medium' | 'large';
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   disabled?: boolean;
 }
+
+const sizeStyles = {
+  small: 'smallSize',
+  medium: 'mediumSize',
+  large: 'largeSize',
+} as const;
+
+const variantTextStyles = {
+  primary: 'primaryText',
+  outline: 'outlineText',
+  ghost: 'ghostText',
+} as const;
 
 export default function Button({ title, onPress, variant = 'primary', size = 'medium', style, textStyle, disabled }: ButtonProps) {
   return (
@@ -18,7 +37,7 @@ export default function Button({ title, onPress, variant = 'primary', size = 'me
       style={[
         styles.base,
         styles[variant],
-        styles[`${size}Size` as keyof typeof styles],
+        styles[sizeStyles[size]],
         disabled && styles.disabled,
         style,
       ]}
@@ -26,7 +45,7 @@ export default function Button({ title, onPress, variant = 'primary', size = 'me
       disabled={disabled}
       activeOpacity={0.7}
     >
-      <Text style={[styles.text, styles[`${variant}Text` as keyof typeof styles], textStyle]}>
+      <Text style={[styles.text, styles[variantTextStyles[variant]], textStyle]}>
         {title}
       </Text>
     </TouchableOpacity>

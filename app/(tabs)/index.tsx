@@ -9,12 +9,20 @@ import { getSitters } from '../../lib/db';
 import SearchBar from '../../components/SearchBar';
 import SitterCard from '../../components/SitterCard';
 import ProductCard from '../../components/ProductCard';
+import { useAuth } from '../../lib/auth-context';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { isLoggedIn, needsOnboarding } = useAuth();
   const [search, setSearch] = useState('');
   const [featuredSitters, setFeaturedSitters] = useState<Sitter[]>([]);
   const [loadingSitters, setLoadingSitters] = useState(true);
+
+  useEffect(() => {
+    if (isLoggedIn && needsOnboarding) {
+      router.replace('/onboarding');
+    }
+  }, [isLoggedIn, needsOnboarding, router]);
 
   useEffect(() => {
     (async () => {

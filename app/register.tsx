@@ -25,10 +25,10 @@ export default function RegisterScreen() {
       return;
     }
     setLoading(true);
-    const { success, error } = await register(email, password, name);
+    const { success, error } = await register(email, password, name, role);
     setLoading(false);
     if (success) {
-      router.back();
+      router.replace('/onboarding');
     } else if (error) {
       Alert.alert('Greška', error);
     }
@@ -38,7 +38,7 @@ export default function RegisterScreen() {
     setLoading(true);
     await login(email || 'demo@petpark.hr', 'demo');
     setLoading(false);
-    router.back();
+    router.replace('/onboarding');
   };
 
   return (

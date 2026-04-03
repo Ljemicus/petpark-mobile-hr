@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
@@ -8,7 +8,13 @@ import Button from '../../components/Button';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, session, isLoggedIn, logout, needsOnboarding } = useAuth();
+  const meta = session?.user?.user_metadata ?? {};
+  const onboarding = (meta.onboarding ?? {}) as Record<string, any>;
+  const verificationStatus = (meta.verification_status ?? onboarding.verificationStatus ?? 'none') as string;
+  const verificationNotes = (onboarding.verificationNotes ?? '') as string;
+  const verificationDocs = (onboarding.verificationDocuments ?? []) as string[];
+  const onboardingCompleted = !needsOnboarding;
 
   if (!isLoggedIn) {
     return (
@@ -60,9 +66,13 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Profile Card */}
       <View style={styles.profileCard}>
-        <View style={styles.avatarLarge}>
-          <Text style={styles.avatarText}>{user!.avatar}</Text>
-        </View>
+        {typeof user!.avatar === 'string' && user!.avatar.startsWith('http') ? (
+          <Image source={{ uri: user!.avatar }} style={styles.avatarImage} />
+        ) : (
+          <View style={styles.avatarLarge}>
+            <Text style={styles.avatarText}>{user!.avatar}</Text>
+          </View>
+        )}
         <Text style={styles.userName}>{user!.name}</Text>
         <Text style={styles.userEmail}>{user!.email}</Text>
         <View style={styles.roleBadge}>
@@ -74,7 +84,70 @@ export default function ProfileScreen() {
           <Ionicons name="location-outline" size={16} color={Colors.muted} />
           <Text style={styles.locationText}>{user!.city}</Text>
         </View>
+
+        <View style={styles.statusStack}>
+          <View style={[styles.statusPill, onboardingCompleted ? styles.statusPillSuccess : styles.statusPillWarning]}>
+            <Text style={[styles.statusPillText, onboardingCompleted ? styles.statusPillTextSuccess : styles.statusPillTextWarning]}>
+              {onboardingCompleted ? 'Onboarding dovršen' : 'Onboarding nije dovršen'}
+            </Text>
+          </View>
+
+          {user!.role === 'sitter' ? (
+            <View style={[styles.statusPill, verificationStatus === 'pending' ? styles.statusPillInfo : styles.statusPillMuted]}>
+              <Text style={[styles.statusPillText, verificationStatus === 'pending' ? styles.statusPillTextInfo : styles.statusPillTextMuted]}>
+                {verificationStatus === 'pending' ? 'Verifikacija na čekanju' : 'Nije verificiran'}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {!onboardingCompleted ? (
+          <Button title="Dovrši onboarding" onPress={() => router.push('/onboarding')} size="medium" style={styles.onboardingButton} />
+        ) : null}
       </View>
+
+      {/* Verification Details (sitters only) */}
+      {user!.role === 'sitter' && verificationStatus !== 'none' ? (
+        <View style={styles.verificationCard}>
+          <View style={styles.verificationHeader}>
+            <Ionicons
+              name={verificationStatus === 'pending' ? 'time-outline' : verificationStatus === 'verified' ? 'checkmark-circle' : 'alert-circle-outline'}
+              size={20}
+              color={verificationStatus === 'pending' ? '#2563EB' : verificationStatus === 'verified' ? '#16A34A' : Colors.muted}
+            />
+            <Text style={styles.verificationTitle}>Verifikacija</Text>
+            <View style={[
+              styles.verificationBadge,
+              verificationStatus === 'pending' && styles.verificationBadgePending,
+              verificationStatus === 'verified' && styles.verificationBadgeVerified,
+            ]}>
+              <Text style={[
+                styles.verificationBadgeText,
+                verificationStatus === 'pending' && styles.verificationBadgeTextPending,
+                verificationStatus === 'verified' && styles.verificationBadgeTextVerified,
+              ]}>
+                {verificationStatus === 'pending' ? 'Na čekanju' : verificationStatus === 'verified' ? 'Verificiran' : verificationStatus}
+              </Text>
+            </View>
+          </View>
+
+          {verificationDocs.length > 0 ? (
+            <View style={styles.verificationRow}>
+              <Ionicons name="document-text-outline" size={16} color={Colors.textSecondary} />
+              <Text style={styles.verificationDetail}>
+                {verificationDocs.length} {verificationDocs.length === 1 ? 'dokument poslan' : 'dokumenta poslana'}
+              </Text>
+            </View>
+          ) : null}
+
+          {verificationNotes ? (
+            <View style={styles.verificationRow}>
+              <Ionicons name="chatbubble-outline" size={16} color={Colors.textSecondary} />
+              <Text style={styles.verificationDetail} numberOfLines={2}>{verificationNotes}</Text>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       {/* Menu */}
       <View style={styles.menu}>
@@ -203,6 +276,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 12,
+    backgroundColor: Colors.white,
+  },
   avatarText: {
     fontSize: 40,
   },
@@ -237,6 +317,102 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 14,
     color: Colors.muted,
+  },
+  statusStack: {
+    marginTop: 14,
+    gap: 8,
+    alignItems: 'center',
+  },
+  statusPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+  },
+  statusPillSuccess: {
+    backgroundColor: '#DCFCE7',
+  },
+  statusPillWarning: {
+    backgroundColor: '#FEF3C7',
+  },
+  statusPillInfo: {
+    backgroundColor: '#DBEAFE',
+  },
+  statusPillMuted: {
+    backgroundColor: '#F3F4F6',
+  },
+  statusPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  statusPillTextSuccess: {
+    color: '#166534',
+  },
+  statusPillTextWarning: {
+    color: '#92400E',
+  },
+  statusPillTextInfo: {
+    color: '#1D4ED8',
+  },
+  statusPillTextMuted: {
+    color: Colors.textSecondary,
+  },
+  onboardingButton: {
+    width: '100%',
+    marginTop: 14,
+  },
+  verificationCard: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    padding: 16,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    gap: 10,
+  },
+  verificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  verificationTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.text,
+    flex: 1,
+  },
+  verificationBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#F3F4F6',
+  },
+  verificationBadgePending: {
+    backgroundColor: '#DBEAFE',
+  },
+  verificationBadgeVerified: {
+    backgroundColor: '#DCFCE7',
+  },
+  verificationBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  verificationBadgeTextPending: {
+    color: '#1D4ED8',
+  },
+  verificationBadgeTextVerified: {
+    color: '#166534',
+  },
+  verificationRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    paddingLeft: 4,
+  },
+  verificationDetail: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    flex: 1,
+    lineHeight: 18,
   },
   menu: {
     marginTop: 20,
