@@ -36,7 +36,7 @@ const buttonVariants: Record<ButtonVariant, { backgroundColor: string; borderCol
 };
 
 const buttonSizes: Record<ButtonSize, ViewStyle> = {
-  small: { minHeight: 36, paddingHorizontal: 14, paddingVertical: 8 },
+  small: { minHeight: 44, paddingHorizontal: 16, paddingVertical: 10 },
   medium: { minHeight: 46, paddingHorizontal: 18, paddingVertical: 12 },
   large: { minHeight: 54, paddingHorizontal: 22, paddingVertical: 15 },
 };
@@ -84,6 +84,7 @@ export function PetParkButton({
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       disabled={disabled || loading}
+      hitSlop={6}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
@@ -173,7 +174,7 @@ export function PetParkListCard({ title, subtitle, meta, badge, children, onPres
 
   if (!onPress) return content;
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
+    <Pressable accessibilityRole="button" hitSlop={4} onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
       {content}
     </Pressable>
   );
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.warmBorder,
     borderRadius: PetParkRadii.card,
-    padding: PetParkSpacing.lg,
+    padding: PetParkSpacing.xl,
   },
   elevated: {
     shadowColor: PetParkShadow.color,
@@ -246,8 +247,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: '900',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    letterSpacing: 0.2,
   },
   inputWrap: {
     gap: 7,
@@ -306,6 +306,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.creamSurface,
     paddingVertical: 28,
+    paddingHorizontal: 22,
   },
   emptyIcon: {
     fontSize: 34,
@@ -329,7 +330,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   listCard: {
-    gap: 10,
+    gap: 12,
   },
   listHeader: {
     flexDirection: 'row',

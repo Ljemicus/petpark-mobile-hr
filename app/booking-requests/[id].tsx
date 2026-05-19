@@ -20,14 +20,17 @@ export default function BookingRequestDetailScreen() {
   const { isLoggedIn, loading: authLoading } = useAuth();
   const [ownerRequests, setOwnerRequests] = useState<OwnerBookingRequestSummary[]>([]);
   const [providerRequests, setProviderRequests] = useState<ProviderBookingRequestSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const role: Role = params.role === 'provider' ? 'provider' : 'owner';
   const requestId = String(params.id || '');
 
   const load = useCallback(async () => {
-    if (!isLoggedIn || !requestId) return;
+    if (!isLoggedIn || !requestId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

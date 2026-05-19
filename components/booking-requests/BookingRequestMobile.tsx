@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../lib/colors';
 import {
@@ -51,6 +52,12 @@ function unreadBadge(count: number) {
   return <PetParkBadge label={`${count} novo`} tone="teal" />;
 }
 
+function listTitleFor(request: RequestSummary, role: Role) {
+  if (role === 'owner' && 'providerName' in request) return request.providerName;
+  if (isProviderRequest(request)) return request.requesterName ? `${request.requesterName} · ${request.serviceLabel}` : request.serviceLabel;
+  return request.serviceLabel;
+}
+
 export function BookingRequestList({ requests, role, onRefresh }: { requests: RequestSummary[]; role: Role; onRefresh?: () => void }) {
   const router = useRouter();
   if (!requests.length) {
@@ -69,15 +76,15 @@ export function BookingRequestList({ requests, role, onRefresh }: { requests: Re
       {requests.map((request) => (
         <PetParkListCard
           key={request.id}
-          title={role === 'owner' && 'providerName' in request ? request.providerName : request.serviceLabel}
+          title={listTitleFor(request, role)}
           subtitle={`${request.serviceLabel} · ${request.petName} (${request.petType})`}
           meta={`${request.dateRange} · ${request.submittedAt}`}
           badge={unreadBadge(request.unreadNotificationCount) || <PetParkStatusChip status={request.status} />}
           onPress={() => router.push({ pathname: '/booking-requests/[id]', params: { id: request.id, role } } as any)}
         >
           <View style={styles.cardFooter}>
-            <PetParkStatusChip status={request.status} />
             <Text style={styles.cardFooterText} numberOfLines={2}>{request.notes || 'Bez dodatne napomene.'}</Text>
+            <Text style={styles.cardActionText}>Otvori detalje</Text>
           </View>
         </PetParkListCard>
       ))}
@@ -180,7 +187,7 @@ function RequestConversation({ requestId, enabled }: { requestId: string; enable
     setError(null);
     try {
       const response = await getBookingRequestMessages(requestId);
-      setMessages(response.data.messages);
+      setMessages(response.messages);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Razgovor trenutno nije dostupan.');
     } finally {
@@ -201,8 +208,8 @@ function RequestConversation({ requestId, enabled }: { requestId: string; enable
     setSending(true);
     setError(null);
     try {
-      const response = await sendBookingRequestMessage(requestId, trimmed);
-      setMessages(response.data.messages);
+      const message = await sendBookingRequestMessage(requestId, trimmed);
+      setMessages((current) => [...current, message]);
       setBody('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Slanje poruke nije uspjelo.');
@@ -235,6 +242,7 @@ function RequestConversation({ requestId, enabled }: { requestId: string; enable
         maxLength={2000}
         style={styles.messageInput}
       />
+      <Text style={styles.charCounter}>{body.length}/2000</Text>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <PetParkButton title="Pošalji" onPress={send} loading={sending} disabled={sending || !body.trim()} />
     </PetParkCard>
@@ -286,7 +294,7 @@ function ProviderStatusActions({ requestId, status, onChanged }: { requestId: st
     <PetParkCard>
       <Text style={styles.sectionTitle}>Akcije</Text>
       <Text style={styles.mutedText}>Zatvaranje samo završava ručni follow-up — bez rezervacije, kalendara ili plaćanja.</Text>
-      <View style={styles.actionRow}>
+      <View style={styles.actionStack}>
         {status === 'pending' ? <PetParkButton title="Označi kontaktirano" onPress={() => run('contacted')} loading={loading === 'contacted'} style={styles.flexOne} /> : null}
         <PetParkButton title="Zatvori" variant="outline" onPress={() => run('closed')} loading={loading === 'closed'} style={styles.flexOne} />
       </View>
@@ -296,20 +304,23 @@ function ProviderStatusActions({ requestId, status, onChanged }: { requestId: st
 
 export function BookingRequestScreenShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.screenTitle}>{title}</Text>
-      {children}
-    </ScrollView>
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.screenTitle}>{title}</Text>
+        {children}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.cream },
-  content: { padding: 18, gap: 14, paddingBottom: 40 },
+  content: { padding: 20, gap: 16, paddingBottom: 44 },
   screenTitle: { color: Colors.forest, fontSize: 28, fontWeight: '900', lineHeight: 34 },
-  list: { gap: 12 },
+  list: { gap: 14 },
   cardFooter: { gap: 8 },
   cardFooterText: { color: Colors.mutedText, fontSize: 13, fontWeight: '700', lineHeight: 19 },
+  cardActionText: { color: Colors.orangePrimary, fontSize: 13, fontWeight: '900', marginTop: 2 },
   detailWrap: { gap: 14 },
   detailHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   flexOne: { flex: 1 },
@@ -333,6 +344,7 @@ const styles = StyleSheet.create({
   bubbleMeta: { color: Colors.mutedText, fontSize: 11, fontWeight: '800', marginBottom: 5 },
   bubbleText: { color: Colors.text, fontSize: 14, fontWeight: '700', lineHeight: 20 },
   messageInput: { minHeight: 86, borderWidth: 1, borderColor: Colors.warmBorder, backgroundColor: Colors.white, color: Colors.text, borderRadius: 18, padding: 12, marginTop: 14, textAlignVertical: 'top', fontWeight: '700' },
+  charCounter: { alignSelf: 'flex-end', color: Colors.mutedText, fontSize: 11, fontWeight: '800', marginTop: 6 },
   errorText: { color: Colors.error, fontSize: 12, fontWeight: '800', marginTop: 8 },
-  actionRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  actionStack: { gap: 10, marginTop: 14 },
 });

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../lib/colors';
 import { useAuth } from '../lib/auth-context';
@@ -17,11 +17,16 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { isLoggedIn, loading: authLoading } = useAuth();
   const [notifications, setNotifications] = useState<BookingRequestNotificationSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     setError(null);
     try {
       setNotifications(await getInAppNotifications());
@@ -40,6 +45,7 @@ export default function NotificationsScreen() {
     if (!notification.readAt) {
       try {
         await markNotificationRead(notification.id);
+        setNotifications((current) => current.map((item) => item.id === notification.id ? { ...item, readAt: new Date().toISOString() } : item));
       } catch {
         // Own-only backend check decides; opening still continues if target exists.
       }
@@ -48,6 +54,22 @@ export default function NotificationsScreen() {
     const role = roleHintFromTargetPath(notification.targetPath) || 'owner';
     if (id) router.push({ pathname: '/booking-requests/[id]', params: { id, role } } as any);
     else load();
+  }
+
+  async function refresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
+
+  function contextFor(notification: BookingRequestNotificationSummary) {
+    const role = roleHintFromTargetPath(notification.targetPath);
+    if (notification.type === 'booking_request_message') return role === 'provider' ? 'Nova poruka za upit za tvoju uslugu' : 'Nova poruka za tvoj upit';
+    if (notification.type === 'booking_request_created') return 'Novi upit za uslugu';
+    if (notification.type === 'booking_request_contacted') return 'Pružatelj je označio upit kao kontaktiran';
+    if (notification.type === 'booking_request_closed') return 'Upit je zatvoren';
+    if (notification.type === 'booking_request_withdrawn') return 'Vlasnik je povukao upit';
+    return 'PetPark obavijest';
   }
 
   if (authLoading || loading) return <BookingRequestScreenShell title="Obavijesti"><ActivityIndicator color={Colors.orangePrimary} /></BookingRequestScreenShell>;
@@ -71,20 +93,17 @@ export default function NotificationsScreen() {
             key={notification.id}
             title={notification.title}
             subtitle={notification.body}
-            meta={notification.createdAtLabel}
+            meta={`${contextFor(notification)} · ${notification.createdAtLabel}`}
             badge={notification.readAt ? <PetParkBadge label="Pročitano" tone="muted" /> : <PetParkBadge label="Novo" tone="teal" />}
             onPress={() => openNotification(notification)}
-          >
-            <Text style={styles.target}>{notification.targetPath}</Text>
-          </PetParkListCard>
+          />
         ))}
       </View>
-      <PetParkButton title="Osvježi" variant="outline" onPress={load} />
+      <PetParkButton title="Osvježi" variant="outline" onPress={refresh} loading={refreshing} />
     </BookingRequestScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
   list: { gap: 12 },
-  target: { color: Colors.mutedText, fontSize: 12, fontWeight: '700' },
 });

@@ -54,12 +54,16 @@ export default function ProfileScreen() {
     );
   }
 
+  const isProvider = user!.role === 'sitter' || user!.role === 'oboje';
   const menuItems = [
-    { icon: 'grid-outline' as const, label: 'Dashboard', route: '/(tabs)' },
-    { icon: 'chatbubble-outline' as const, label: 'Poruke', route: '/(tabs)' },
-    { icon: 'heart-outline' as const, label: 'Favoriti', route: '/(tabs)' },
-    { icon: 'card-outline' as const, label: 'Narudžbe', route: '/cart' },
-    { icon: 'settings-outline' as const, label: 'Postavke', route: '/(tabs)' },
+    { icon: 'paw-outline' as const, label: 'Moji upiti', helper: 'Upiti koje si poslao/la pružateljima', route: '/dashboard/owner/requests' },
+    ...(isProvider ? [{ icon: 'briefcase-outline' as const, label: 'Upiti za usluge', helper: 'Novi upiti za tvoje usluge', route: '/dashboard/sitter/requests' }] : []),
+    { icon: 'notifications-outline' as const, label: 'Obavijesti', helper: 'In-app obavijesti za upite i poruke', route: '/notifications' },
+    { icon: 'grid-outline' as const, label: 'Dashboard', helper: 'Brzi pregled PetPark računa', route: '/(tabs)' },
+    { icon: 'chatbubble-outline' as const, label: 'Poruke', helper: 'Razgovori i podrška', route: '/messages' },
+    { icon: 'heart-outline' as const, label: 'Favoriti', helper: 'Spremljeni profili i usluge', route: '/(tabs)' },
+    { icon: 'card-outline' as const, label: 'Narudžbe', helper: 'Shop košarica i narudžbe', route: '/cart' },
+    { icon: 'settings-outline' as const, label: 'Postavke', helper: 'Postavke profila', route: '/(tabs)' },
   ];
 
   return (
@@ -155,7 +159,10 @@ export default function ProfileScreen() {
           <TouchableOpacity key={item.label} style={styles.menuItem} onPress={() => router.push(item.route as any)}>
             <View style={styles.menuLeft}>
               <Ionicons name={item.icon} size={22} color={Colors.text} />
-              <Text style={styles.menuLabel}>{item.label}</Text>
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Text style={styles.menuHelper}>{item.helper}</Text>
+              </View>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.muted} />
           </TouchableOpacity>
@@ -242,15 +249,20 @@ const styles = StyleSheet.create({
     color: Colors.muted,
   },
   socialButtons: {
-    flexDirection: 'row',
-    gap: 16,
+    flexDirection: 'column',
+    gap: 10,
+    alignSelf: 'center',
+    width: '70%',
   },
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    alignSelf: 'stretch',
+    minHeight: 48,
     backgroundColor: '#F3F4F6',
-    paddingHorizontal: 20,
+    paddingHorizontal: 8,
     paddingVertical: 12,
     borderRadius: 12,
   },
@@ -433,11 +445,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+  },
+  menuTextWrap: {
+    flex: 1,
+    gap: 3,
   },
   menuLabel: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '800',
     color: Colors.text,
+  },
+  menuHelper: {
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 17,
+    color: Colors.textSecondary,
   },
   logoutButton: {
     flexDirection: 'row',

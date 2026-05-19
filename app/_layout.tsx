@@ -28,10 +28,11 @@ export default function RootLayout() {
                 <Stack.Screen name="sitter/[id]" options={{ title: 'Profil sittera' }} />
                 <Stack.Screen name="topic/[id]" options={{ title: 'Tema' }} />
                 <Stack.Screen name="messages" options={{ title: 'Poruke' }} />
-                <Stack.Screen name="notifications" options={{ title: 'Obavijesti' }} />
+                <Stack.Screen name="notifications" options={{ headerShown: false }} />
                 <Stack.Screen name="chat" options={{ headerShown: false }} />
                 <Stack.Screen name="booking" options={{ headerShown: false }} />
                 <Stack.Screen name="booking-requests" options={{ headerShown: false }} />
+                <Stack.Screen name="booking-requests/[id]" options={{ headerShown: false }} />
                 <Stack.Screen name="payments" options={{ headerShown: false }} />
                 <Stack.Screen name="pet-passport" options={{ headerShown: false }} />
                 <Stack.Screen name="lost-pets" options={{ title: 'Izgubljeni ljubimci' }} />
@@ -42,7 +43,9 @@ export default function RootLayout() {
                 <Stack.Screen name="onboarding" options={{ title: 'Onboarding', headerShown: false }} />
                 <Stack.Screen name="admin/verification" options={{ title: 'Verifikacija sittera' }} />
                 <Stack.Screen name="dashboard/owner" options={{ headerShown: false }} />
+                <Stack.Screen name="dashboard/owner/requests" options={{ headerShown: false }} />
                 <Stack.Screen name="dashboard/sitter" options={{ headerShown: false }} />
+                <Stack.Screen name="dashboard/sitter/requests" options={{ headerShown: false }} />
                 <Stack.Screen name="dashboard/groomer" options={{ headerShown: false }} />
                 <Stack.Screen name="dashboard/breeder" options={{ headerShown: false }} />
                 <Stack.Screen name="dashboard/trainer" options={{ headerShown: false }} />

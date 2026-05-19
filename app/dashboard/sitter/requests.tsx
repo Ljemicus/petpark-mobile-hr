@@ -11,11 +11,15 @@ export default function SitterRequestsScreen() {
   const router = useRouter();
   const { isLoggedIn, loading: authLoading } = useAuth();
   const [requests, setRequests] = useState<ProviderBookingRequestSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     setError(null);
     try {
       setRequests(await getProviderBookingRequests());
