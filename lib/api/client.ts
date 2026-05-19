@@ -25,6 +25,15 @@ export class PetParkApiError extends Error {
   }
 }
 
+function fallbackMessageForStatus(status: number) {
+  if (status === 401) return 'Prijavi se za nastavak.';
+  if (status === 403) return 'Nemaš dopuštenje za ovu akciju.';
+  if (status === 404) return 'Traženi sadržaj nije pronađen.';
+  if (status === 429) return 'Previše zahtjeva odjednom. Pričekaj trenutak pa pokušaj ponovno.';
+  if (status >= 500) return 'PetPark trenutno ne može obraditi zahtjev. Pokušaj ponovno malo kasnije.';
+  return 'PetPark zahtjev nije uspio.';
+}
+
 export function getApiBaseUrl() {
   const configured = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_BASE_URL;
   return String(configured).replace(/\/$/, '');
@@ -54,15 +63,25 @@ export async function petParkApi<T>(path: string, options: RequestInit & { auth?
     throw new PetParkApiError({ status: 401, code: 'UNAUTHORIZED', message: 'Prijavi se za nastavak.' });
   }
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...requestOptions,
-    headers: {
-      accept: 'application/json',
-      ...(requestOptions.body ? { 'content-type': 'application/json' } : null),
-      ...(token ? { authorization: `Bearer ${token}` } : null),
-      ...headers,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${getApiBaseUrl()}${path}`, {
+      ...requestOptions,
+      headers: {
+        accept: 'application/json',
+        ...(requestOptions.body ? { 'content-type': 'application/json' } : null),
+        ...(token ? { authorization: `Bearer ${token}` } : null),
+        ...headers,
+      },
+    });
+  } catch (error) {
+    throw new PetParkApiError({
+      status: 0,
+      code: 'NETWORK_ERROR',
+      message: 'Ne mogu se spojiti na PetPark. Provjeri internet vezu i pokušaj ponovno.',
+      details: error,
+    });
+  }
 
   const json = await parseJson(response);
 
@@ -71,7 +90,7 @@ export async function petParkApi<T>(path: string, options: RequestInit & { auth?
     throw new PetParkApiError({
       status: response.status,
       code: payload.code || payload.error || `HTTP_${response.status}`,
-      message: payload.message || payload.error || 'PetPark zahtjev nije uspio.',
+      message: payload.message || payload.error || fallbackMessageForStatus(response.status),
       details: payload.details,
     });
   }

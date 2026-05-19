@@ -71,11 +71,29 @@ export type BookingRequestMessage = {
   isOwnMessage: boolean;
 };
 
+type ApiBookingRequestMessage = {
+  id: string;
+  bookingRequestId: string;
+  senderProfileId: string;
+  senderRole: 'owner' | 'provider' | 'admin' | string;
+  body: string;
+  createdAt: string;
+  createdAtLabel: string;
+  isMine: boolean;
+};
+
 export type BookingRequestMessagesResponse = {
   ok: true;
   data: {
     role: 'owner' | 'provider' | 'admin';
-    messages: BookingRequestMessage[];
+    messages: ApiBookingRequestMessage[];
+  };
+};
+
+export type BookingRequestMessageCreateResponse = {
+  ok: true;
+  data: {
+    message: ApiBookingRequestMessage;
   };
 };
 
@@ -114,6 +132,20 @@ export function getHealth() {
   return petParkApi<HealthResponse>('/api/health');
 }
 
+function senderLabelFor(role: string) {
+  if (role === 'provider') return 'Pružatelj';
+  if (role === 'admin') return 'PetPark';
+  return 'Vlasnik';
+}
+
+function mapMessage(message: ApiBookingRequestMessage): BookingRequestMessage {
+  return {
+    ...message,
+    senderLabel: senderLabelFor(message.senderRole),
+    isOwnMessage: Boolean(message.isMine),
+  };
+}
+
 export async function getOwnerBookingRequests(): Promise<OwnerBookingRequestSummary[]> {
   const response = await petParkApi<OwnerBookingRequestsResponse>('/api/booking-requests/owner', { auth: true });
   return response.data.requests;
@@ -139,16 +171,18 @@ export function updateBookingRequestStatus(id: string, status: BookingRequestAct
   });
 }
 
-export function getBookingRequestMessages(id: string) {
-  return petParkApi<BookingRequestMessagesResponse>(`/api/booking-requests/${encodeURIComponent(id)}/messages`, {
+export async function getBookingRequestMessages(id: string): Promise<{ role: 'owner' | 'provider' | 'admin'; messages: BookingRequestMessage[] }> {
+  const response = await petParkApi<BookingRequestMessagesResponse>(`/api/booking-requests/${encodeURIComponent(id)}/messages`, {
     auth: true,
   });
+  return { role: response.data.role, messages: response.data.messages.map(mapMessage) };
 }
 
-export function sendBookingRequestMessage(id: string, body: string) {
-  return petParkApi<BookingRequestMessagesResponse>(`/api/booking-requests/${encodeURIComponent(id)}/messages`, {
+export async function sendBookingRequestMessage(id: string, body: string): Promise<BookingRequestMessage> {
+  const response = await petParkApi<BookingRequestMessageCreateResponse>(`/api/booking-requests/${encodeURIComponent(id)}/messages`, {
     method: 'POST',
     auth: true,
     body: JSON.stringify({ body }),
   });
+  return mapMessage(response.data.message);
 }
