@@ -11,17 +11,6 @@ export interface Sitter {
   verified: boolean;
 }
 
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  emoji: string;
-  image: string;
-  category: string;
-  description: string;
-  rating: number;
-}
-
 export interface ForumCategory {
   id: string;
   name: string;
@@ -64,29 +53,6 @@ export const sitters: Sitter[] = [
   { id: '12', name: 'Ivan Vuković', city: 'Rijeka', rating: 4.5, reviewCount: 39, pricePerHour: 8, bio: 'Čuvam sve vrste ljubimaca - od pasa do gmazova. Fleksibilan raspored.', services: ['Čuvanje', 'Hranjenje', 'Noćenje'], avatar: 'https://images.unsplash.com/photo-1463453091185-61582044d556?w=400&h=400&fit=crop', verified: false },
 ];
 
-export const products: Product[] = [
-  { id: '1', name: 'Premium suha hrana za pse', price: 45.99, emoji: '🍖', image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop', category: 'Hrana', description: 'Visokokvalitetna suha hrana za odrasle pse, bez žitarica. 12kg pakiranje.', rating: 4.8 },
-  { id: '2', name: 'Mokra hrana za mačke', price: 12.99, emoji: '🐟', image: 'https://images.unsplash.com/photo-1623387641168-d9803ddd3f35?w=400&h=400&fit=crop', category: 'Hrana', description: 'Pašteta od tune za mačke. Pakiranje od 12 konzervi.', rating: 4.6 },
-  { id: '3', name: 'Teniska loptica za pse', price: 4.99, emoji: '🎾', image: 'https://images.unsplash.com/photo-1535008652995-e95986556e32?w=400&h=400&fit=crop', category: 'Igračke', description: 'Izdržljiva teniska loptica za igru s psom. Set od 3 komada.', rating: 4.7 },
-  { id: '4', name: 'Miš igračka za mačke', price: 6.99, emoji: '🐭', image: 'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400&h=400&fit=crop', category: 'Igračke', description: 'Plišani miš s mačjom travom. Vaša mačka će ga obožavati!', rating: 4.5 },
-  { id: '5', name: 'Povodac za pse - retraktabilni', price: 19.99, emoji: '🦮', image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=400&fit=crop', category: 'Povodci', description: 'Retraktabilni povodac do 5 metara za pse do 25kg.', rating: 4.4 },
-  { id: '6', name: 'Kožni povodac premium', price: 34.99, emoji: '🦮', image: 'https://images.unsplash.com/photo-1567612529009-afe25413be6c?w=400&h=400&fit=crop', category: 'Povodci', description: 'Ručno rađen kožni povodac. Elegantan i izdržljiv.', rating: 4.9 },
-  { id: '7', name: 'Ortopedski krevet za pse', price: 79.99, emoji: '🛏️', image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400&h=400&fit=crop', category: 'Krevetići', description: 'Memory foam krevet za pse srednje veličine. Perivi navlak.', rating: 4.8 },
-  { id: '8', name: 'Mačji krevet - igloo', price: 39.99, emoji: '🛏️', image: 'https://images.unsplash.com/photo-1545249390-6bdfa286032f?w=400&h=400&fit=crop', category: 'Krevetići', description: 'Zatvoreni krevet za mačke u obliku igloa. Topao i udoban.', rating: 4.7 },
-  { id: '9', name: 'Keramička posuda za hranu', price: 14.99, emoji: '🥣', image: 'https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=400&h=400&fit=crop', category: 'Posude', description: 'Keramička posuda za hranu, otporna na klizanje. 400ml.', rating: 4.3 },
-  { id: '10', name: 'Automatska pojilica', price: 29.99, emoji: '🥣', image: 'https://images.unsplash.com/photo-1583337130417-13104dec14c5?w=400&h=400&fit=crop', category: 'Posude', description: 'Automatska pojilica s filterom. Kapacitet 2L.', rating: 4.6 },
-  { id: '11', name: 'Šampon za pse - prirodni', price: 11.99, emoji: '🧴', image: 'https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?w=400&h=400&fit=crop', category: 'Njega', description: 'Prirodni šampon bez parabena. Za osjetljivu kožu.', rating: 4.5 },
-  { id: '12', name: 'Četka za dlaku', price: 8.99, emoji: '🧴', image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400&h=400&fit=crop', category: 'Njega', description: 'Profesionalna četka za uklanjanje poddlake.', rating: 4.4 },
-  { id: '13', name: 'Zimska jakna za pse', price: 24.99, emoji: '👕', image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400&h=400&fit=crop', category: 'Odjeća', description: 'Vodootporna zimska jakna za male i srednje pse.', rating: 4.6 },
-  { id: '14', name: 'Kišna kabanica za pse', price: 18.99, emoji: '👕', image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop', category: 'Odjeća', description: 'Lagana kabanica s kapuljačom za kišne šetnje.', rating: 4.3 },
-  { id: '15', name: 'Dentalni štapići', price: 9.99, emoji: '🦴', image: 'https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400&h=400&fit=crop', category: 'Grickalice', description: 'Dentalni štapići za čišćenje zuba. Pakiranje od 20 komada.', rating: 4.7 },
-  { id: '16', name: 'Sušeno meso - patka', price: 15.99, emoji: '🦴', image: 'https://images.unsplash.com/photo-1623387641168-d9803ddd3f35?w=400&h=400&fit=crop', category: 'Grickalice', description: '100% prirodno sušeno pačje meso. 200g.', rating: 4.8 },
-  { id: '17', name: 'Interaktivna puzzle igračka', price: 22.99, emoji: '🎾', image: 'https://images.unsplash.com/photo-1535930749574-1399327ce78f?w=400&h=400&fit=crop', category: 'Igračke', description: 'Puzzle igračka za mentalni razvoj psa. 3 razine težine.', rating: 4.6 },
-  { id: '18', name: 'Hrana za štence', price: 38.99, emoji: '🍖', image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop', category: 'Hrana', description: 'Specijalna formula za štence do 12 mjeseci. 8kg.', rating: 4.7 },
-  { id: '19', name: 'GPS ogrlica za pse', price: 89.99, emoji: '🦮', image: 'https://images.unsplash.com/photo-1587559045816-8b0a54d1db76?w=400&h=400&fit=crop', category: 'Povodci', description: 'GPS tracker ogrlica s praćenjem u stvarnom vremenu.', rating: 4.5 },
-  { id: '20', name: 'Transportna torba za mačke', price: 44.99, emoji: '🧴', image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=400&fit=crop', category: 'Njega', description: 'Prozračna transportna torba za mačke do 6kg.', rating: 4.4 },
-];
-
 export const forumCategories: ForumCategory[] = [
   { id: '1', name: 'Zdravlje', emoji: '🏥', topicCount: 145, description: 'Pitanja o zdravlju ljubimaca' },
   { id: '2', name: 'Prehrana', emoji: '🍖', topicCount: 98, description: 'Savjeti o prehrani' },
@@ -119,22 +85,10 @@ export const users: User[] = [
   { id: '5', name: 'Maja Tomić', email: 'maja@example.com', avatar: '👩‍🦳', role: 'sitter', city: 'Zagreb' },
 ];
 
-export const shopCategories = [
-  { id: 'Hrana', name: 'Hrana', emoji: '🍖' },
-  { id: 'Igračke', name: 'Igračke', emoji: '🎾' },
-  { id: 'Povodci', name: 'Povodci', emoji: '🦮' },
-  { id: 'Krevetići', name: 'Krevetići', emoji: '🛏️' },
-  { id: 'Posude', name: 'Posude', emoji: '🥣' },
-  { id: 'Njega', name: 'Njega', emoji: '🧴' },
-  { id: 'Odjeća', name: 'Odjeća', emoji: '👕' },
-  { id: 'Grickalice', name: 'Grickalice', emoji: '🦴' },
-];
-
 export const quickActions = [
   { id: '1', name: 'Sitteri', emoji: '🐾', route: '/(tabs)/search' },
   { id: '2', name: 'Grooming', emoji: '✂️', route: '/grooming' },
   { id: '3', name: 'Dresura', emoji: '🎓', route: '/training' },
-  { id: '4', name: 'Shop', emoji: '🛍️', route: '/(tabs)/shop' },
-  { id: '5', name: 'Forum', emoji: '💬', route: '/(tabs)/forum' },
-  { id: '6', name: 'Izgubljeni', emoji: '🔍', route: '/lost-pets' },
+  { id: '4', name: 'Forum', emoji: '💬', route: '/(tabs)/forum' },
+  { id: '5', name: 'Izgubljeni', emoji: '🔍', route: '/lost-pets' },
 ];

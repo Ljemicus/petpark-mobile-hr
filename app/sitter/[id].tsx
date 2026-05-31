@@ -7,10 +7,12 @@ import { Sitter } from '../../lib/mock-data';
 import { getSitterById } from '../../lib/db';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
+import { useAuth } from '../../lib/auth-context';
 
 export default function SitterDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const [sitter, setSitter] = useState<Sitter | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +23,17 @@ export default function SitterDetailScreen() {
       setLoading(false);
     })();
   }, [id]);
+
+  const handleBookPress = () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    router.push({
+      pathname: '/booking/[sitterId]',
+      params: { sitterId: id! },
+    });
+  };
 
   if (loading) {
     return (
@@ -125,7 +138,10 @@ export default function SitterDetailScreen() {
           <Text style={styles.priceLabel}>Cijena:</Text>
           <Text style={styles.priceValue}>{sitter.pricePerHour}€/sat</Text>
         </View>
-        <Button title="Rezerviraj termin" onPress={() => router.push('/login')} size="large" style={{ width: '100%' }} />
+        <Button title="Rezerviraj termin" onPress={handleBookPress} size="large" style={{ width: '100%' }} />
+        {!user && (
+          <Text style={styles.loginHint}>Morate biti prijavljeni za rezervaciju</Text>
+        )}
       </View>
 
       <View style={{ height: 40 }} />
@@ -277,6 +293,12 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: Colors.card,
     borderRadius: 20,
+  },
+  loginHint: {
+    fontSize: 12,
+    color: Colors.muted,
+    textAlign: 'center',
+    marginTop: 10,
   },
   priceRow: {
     flexDirection: 'row',

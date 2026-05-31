@@ -27,7 +27,10 @@ export default function BookingRequestDetailScreen() {
   const requestId = String(params.id || '');
 
   const load = useCallback(async () => {
-    if (!isLoggedIn || !requestId) return;
+    if (!isLoggedIn || !requestId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

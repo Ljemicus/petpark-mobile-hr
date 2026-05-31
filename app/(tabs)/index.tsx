@@ -1,367 +1,289 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
-import { Sitter, products, quickActions } from '../../lib/mock-data';
-import { getSitters } from '../../lib/db';
-import SearchBar from '../../components/SearchBar';
-import SitterCard from '../../components/SitterCard';
-import ProductCard from '../../components/ProductCard';
 import { useAuth } from '../../lib/auth-context';
+import { getPrimaryDashboardRoute } from '../../lib/navigation';
+import PetParkLogo from '../../components/PetParkLogo';
+
+const navChips = [
+  { title: 'Usluge', route: '/(tabs)/search' },
+  { title: 'Kako radi', route: '/(tabs)/search' },
+  { title: 'Zajednica', route: '/(tabs)/forum' },
+  { title: 'Blog', route: '/(tabs)/forum' },
+];
+
+const services = [
+  { title: 'Čuvanje', icon: '🏠', bg: '#FBE9DB', route: '/(tabs)/search' },
+  { title: 'Šetnja', icon: '🦮', bg: '#E9F0DF', route: '/walk' },
+  { title: 'Grooming', icon: '✂️', bg: '#DDF4F1', route: '/grooming' },
+  { title: 'Trening', icon: '🎓', bg: '#EAF3E6', route: '/training' },
+  { title: 'Izgubljeni', icon: '📍', bg: '#FCE4DA', route: '/lost-pets' },
+  { title: 'Udomljavanje', icon: '🐾', bg: '#FBE9DB', route: '/(tabs)/forum' },
+];
+
+const activity = [
+  {
+    tag: 'UPOZORENJE',
+    tagBg: '#FBE9DB',
+    tagColor: '#B4531C',
+    title: 'Nestao mačak u Trešnjevci',
+    text: 'Sivi mačak, zelenih očiju, odaziva se na ime Leo.',
+    meta: 'Trešnjevka, Zagreb',
+    image: require('../../assets/live-web/petpark-reference-feed-cat.png'),
+  },
+  {
+    tag: 'PRONAĐEN',
+    tagBg: '#E9F0DF',
+    tagColor: '#286D45',
+    title: 'Pronađen pas kod Maksimira',
+    text: 'Prijateljski pas, s crnom ogrlicom.',
+    meta: 'Maksimir, Zagreb',
+    image: require('../../assets/live-web/petpark-reference-feed-dog.png'),
+  },
+  {
+    tag: 'FORUM',
+    tagBg: '#DDF4F1',
+    tagColor: '#117B76',
+    title: 'Nova tema: priprema psa za čuvanje',
+    text: 'Kako pomoći psu da se osjeća sigurno i opušteno dok ste vi odsutni.',
+    meta: 'Forum zajednice',
+  },
+  {
+    tag: 'BLOG',
+    tagBg: '#FBE9DB',
+    tagColor: '#B4531C',
+    title: 'Članak: kako odabrati groomera',
+    text: 'Savjeti koji će vam pomoći pronaći pravog stručnjaka za vašeg ljubimca.',
+    meta: 'PetPark blog',
+  },
+];
+
+const quickLinks = [
+  { title: 'Forum', text: 'Pitajte, podijelite iskustva i pomozite drugima.', icon: 'chatbubble-ellipses', bg: '#159C98', route: '/(tabs)/forum' },
+  { title: 'Izgubljeni / pronađeni', text: 'Pronašli ste ljubimca ili tražite svog?', icon: 'location', bg: '#F26A00', route: '/lost-pets' },
+  { title: 'Udomljavanje', text: 'Dajte dom. Promijenite život.', icon: 'heart', bg: '#C65F26', route: '/(tabs)/forum' },
+  { title: 'Blog savjeti', text: 'Korisni članci i vodiči za svakog vlasnika.', icon: 'book', bg: '#2E7A63', route: '/(tabs)/forum' },
+];
+
+const trustCards = [
+  { title: 'Provjereni pružatelji usluga', text: 'Sigurnost i kvaliteta', icon: 'shield-checkmark' },
+  { title: 'Zajednica koja pomaže', text: 'Stručni savjeti i podrška', icon: 'people' },
+  { title: 'Lokalno i pouzdano', text: 'Usluge u vašem gradu', icon: 'map' },
+  { title: 'Za sve ljubimce', text: 'Psi, mačke i više', icon: 'paw' },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isLoggedIn, needsOnboarding } = useAuth();
-  const [search, setSearch] = useState('');
-  const [featuredSitters, setFeaturedSitters] = useState<Sitter[]>([]);
-  const [loadingSitters, setLoadingSitters] = useState(true);
+  const { isLoggedIn, needsOnboarding, user } = useAuth();
+  const dashboardRoute = getPrimaryDashboardRoute(user);
 
-  useEffect(() => {
-    if (isLoggedIn && needsOnboarding) {
-      router.replace('/onboarding');
-    }
+  React.useEffect(() => {
+    if (isLoggedIn && needsOnboarding) router.replace('/onboarding');
   }, [isLoggedIn, needsOnboarding, router]);
 
-  useEffect(() => {
-    (async () => {
-      const data = await getSitters();
-      setFeaturedSitters(data.slice(0, 6));
-      setLoadingSitters(false);
-    })();
-  }, []);
+  const push = (route: string) => router.push(route as any);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Hero */}
-        <View style={styles.hero}>
-          <View style={styles.logoRow}>
-            <Image source={require('../../assets/logo-small.png')} style={styles.logoImage} />
-            <Text style={styles.logo}>PetPark</Text>
-          </View>
-          <Text style={styles.heroTitle}>Pronađi savršenog{'\n'}sittera za ljubimca</Text>
-          <Text style={styles.heroSubtitle}>Marketplace za pet sitting u Hrvatskoj</Text>
-          <View style={styles.searchContainer}>
-            <SearchBar
-              placeholder="Pretraži sittere, proizvode..."
-              value={search}
-              onChangeText={setSearch}
-            />
-          </View>
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickActions}>
-            {quickActions.map((action) => (
-              <TouchableOpacity
-                key={action.id}
-                style={styles.quickAction}
-                onPress={() => router.push(action.route as any)}
-              >
-                <View style={styles.quickActionIcon}>
-                  <Text style={styles.quickActionEmoji}>{action.emoji}</Text>
-                </View>
-                <Text style={styles.quickActionText}>{action.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Popular Sitters */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Popularni sitteri</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/search')}>
-              <Text style={styles.seeAll}>Vidi sve</Text>
-            </TouchableOpacity>
-          </View>
-          {loadingSitters ? (
-            <ActivityIndicator size="small" color={Colors.primary} style={{ marginVertical: 20 }} />
-          ) : (
-            <FlatList
-              horizontal
-              data={featuredSitters}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <SitterCard sitter={item} horizontal />}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalList}
-              scrollEnabled={true}
-            />
-          )}
-        </View>
-
-        {/* New in Shop */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Novo u shopu</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/shop')}>
-              <Text style={styles.seeAll}>Vidi sve</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            horizontal
-            data={products.slice(0, 8)}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <ProductCard product={item} horizontal />}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-            scrollEnabled={true}
-          />
-        </View>
-
-        {/* Grooming */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>✂️ Grooming</Text>
-            <TouchableOpacity onPress={() => router.push('/grooming' as any)}>
-              <Text style={styles.seeAll}>Vidi sve</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-            {[
-              { id: 'g1', name: 'Salon Tessa', city: 'Rijeka', rating: 4.8, price: '20€', emoji: '✂️' },
-              { id: 'g2', name: 'Mambo', city: 'Zagreb', rating: 4.9, price: '30€', emoji: '👑' },
-              { id: 'g3', name: 'La Bestia', city: 'Zagreb', rating: 4.8, price: '28€', emoji: '🏆' },
-              { id: 'g4', name: 'DOG BAR', city: 'Rijeka', rating: 4.6, price: '22€', emoji: '🛁' },
-            ].map((g) => (
-              <TouchableOpacity key={g.id} style={styles.miniCard} onPress={() => router.push('/grooming' as any)}>
-                <View style={[styles.miniCardIcon, { backgroundColor: '#fff7ed' }]}>
-                  <Text style={{ fontSize: 24 }}>{g.emoji}</Text>
-                </View>
-                <Text style={styles.miniCardName} numberOfLines={1}>{g.name}</Text>
-                <Text style={styles.miniCardCity}>{g.city}</Text>
-                <View style={styles.miniCardFooter}>
-                  <Text style={styles.miniCardRating}>⭐ {g.rating}</Text>
-                  <Text style={styles.miniCardPrice}>od {g.price}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Dresura */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🎓 Dresura</Text>
-            <TouchableOpacity onPress={() => router.push('/training' as any)}>
-              <Text style={styles.seeAll}>Vidi sve</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-            {[
-              { id: 't1', name: 'Centar Kliker', city: 'Zagreb', rating: 4.9, price: '30€', emoji: '🎯' },
-              { id: 't2', name: 'Kala K9', city: 'Zagreb', rating: 4.8, price: '35€', emoji: '🏋️' },
-              { id: 't3', name: 'K9 Team', city: 'Zagreb', rating: 4.7, price: '25€', emoji: '🛡️' },
-              { id: 't4', name: 'NannyDog', city: 'Split', rating: 4.7, price: '22€', emoji: '🎓' },
-            ].map((t) => (
-              <TouchableOpacity key={t.id} style={styles.miniCard} onPress={() => router.push('/training' as any)}>
-                <View style={[styles.miniCardIcon, { backgroundColor: '#f5f3ff' }]}>
-                  <Text style={{ fontSize: 24 }}>{t.emoji}</Text>
-                </View>
-                <Text style={styles.miniCardName} numberOfLines={1}>{t.name}</Text>
-                <Text style={styles.miniCardCity}>{t.city}</Text>
-                <View style={styles.miniCardFooter}>
-                  <Text style={styles.miniCardRating}>⭐ {t.rating}</Text>
-                  <Text style={styles.miniCardPrice}>od {t.price}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* CTA */}
-        <View style={styles.cta}>
-          <Text style={styles.ctaEmoji}>🐕</Text>
-          <Text style={styles.ctaTitle}>Postani sitter</Text>
-          <Text style={styles.ctaText}>Zarađuj čuvajući ljubimce u svom gradu</Text>
-          <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/register')}>
-            <Text style={styles.ctaButtonText}>Registriraj se</Text>
-            <Ionicons name="arrow-forward" size={16} color={Colors.white} />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.brand} onPress={() => push('/(tabs)')} activeOpacity={0.85}>
+            <PetParkLogo width={148} />
           </TouchableOpacity>
+          <View style={styles.topActions}>
+            <TouchableOpacity style={styles.loginPill} onPress={() => push(isLoggedIn ? dashboardRoute : '/login')}>
+              <Text style={styles.loginText}>{isLoggedIn ? 'Profil' : 'Prijava'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.draftPill} onPress={() => push('/objavi-uslugu')}>
+              <Text style={styles.draftText}>Spremi nacrt</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <View style={{ height: 20 }} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
+          {navChips.map((item) => (
+            <TouchableOpacity key={item.title} style={styles.navChip} onPress={() => push(item.route)}>
+              <Text style={styles.navChipText}>{item.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.heroSection}>
+          <View style={styles.badge}>
+            <Ionicons name="paw" size={14} color="#F26A00" />
+            <Text style={styles.badgeText}>PetPark zajednica</Text>
+          </View>
+          <Text style={styles.heroTitle}>Mjesto gdje zajednica pomaže ljubimcima.</Text>
+          <Text style={styles.heroSubtitle}>Usluge, upozorenja, savjeti i udomljavanje - sve za ljubimce na jednom mjestu.</Text>
+          <View style={styles.heroActions}>
+            <TouchableOpacity style={styles.primaryCta} onPress={() => push('/lost-pets')}>
+              <Ionicons name="notifications-outline" size={19} color="#FFFFFF" />
+              <Text style={styles.primaryCtaText}>Objavi upozorenje</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryCta} onPress={() => push('/(tabs)/search')}>
+              <Ionicons name="search-outline" size={19} color="#103D3A" />
+              <Text style={styles.secondaryCtaText}>Pogledaj usluge</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.heroVisual}>
+            <Image source={require('../../assets/live-web/petpark-reference-hero-mobile-clean.png')} style={styles.heroImage} />
+            <View style={styles.heroOverlay}>
+              <Text style={styles.overlayKicker}>Danas na PetParku</Text>
+              <Text style={styles.overlayText}>Pronađi pomoć, objavi upozorenje ili pitaj zajednicu.</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.serviceGrid}>
+          {services.map((item) => (
+            <TouchableOpacity key={item.title} style={styles.serviceCard} onPress={() => push(item.route)} activeOpacity={0.85}>
+              <View style={[styles.serviceIcon, { backgroundColor: item.bg }]}> 
+                <Text style={styles.serviceEmoji}>{item.icon}</Text>
+              </View>
+              <Text style={styles.serviceTitle}>{item.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.activityBox}>
+          <View style={styles.sectionHeadRow}>
+            <View>
+              <Text style={styles.eyebrow}>Zajednica</Text>
+              <Text style={styles.sectionTitle}>Aktualno</Text>
+            </View>
+            <TouchableOpacity style={styles.allPill} onPress={() => push('/(tabs)/forum')}>
+              <Text style={styles.allPillText}>Sve</Text>
+              <Ionicons name="chevron-forward" size={15} color="#C65F26" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.activityGrid}>
+            {activity.map((item) => (
+              <TouchableOpacity key={item.title} style={styles.activityCard} onPress={() => push('/(tabs)/forum')} activeOpacity={0.86}>
+                {item.image ? <Image source={item.image} style={styles.activityImage} /> : <View style={styles.activityImageFallback}><Ionicons name="paw" size={26} color="#C65F26" /></View>}
+                <View style={styles.activityCopy}>
+                  <View style={styles.activityMetaRow}>
+                    <Text style={[styles.tag, { backgroundColor: item.tagBg, color: item.tagColor }]}>{item.tag}</Text>
+                    <Text style={styles.time}>Prije 2 h</Text>
+                  </View>
+                  <Text style={styles.activityTitle}>{item.title}</Text>
+                  <Text style={styles.activityText} numberOfLines={2}>{item.text}</Text>
+                  <View style={styles.locationRow}>
+                    <Ionicons name="location-outline" size={13} color="#C65F26" />
+                    <Text style={styles.locationText}>{item.meta}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.sectionHeadSimple}>
+          <Text style={styles.eyebrow}>Prečaci</Text>
+          <Text style={styles.sectionTitle}>Brzi pristup</Text>
+        </View>
+        <View style={styles.quickStack}>
+          {quickLinks.map((item) => (
+            <TouchableOpacity key={item.title} style={styles.quickCard} onPress={() => push(item.route)} activeOpacity={0.86}>
+              <View style={styles.quickBubble} />
+              <View style={[styles.quickIcon, { backgroundColor: item.bg }]}><Ionicons name={item.icon as any} size={23} color="#FFFFFF" /></View>
+              <View style={styles.quickCopy}>
+                <Text style={styles.quickTitle}>{item.title}</Text>
+                <Text style={styles.quickText}>{item.text}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#8B958D" />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.trustGrid}>
+          {trustCards.map((item) => (
+            <View key={item.title} style={styles.trustCard}>
+              <Ionicons name={item.icon as any} size={27} color="#2E7A63" />
+              <Text style={styles.trustTitle}>{item.title}</Text>
+              <Text style={styles.trustText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+const webShadow = {
+  shadowColor: 'rgba(80,55,25,0.12)',
+  shadowOffset: { width: 0, height: 12 },
+  shadowOpacity: 1,
+  shadowRadius: 24,
+  elevation: 3,
+};
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  hero: {
-    backgroundColor: Colors.card,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  logoImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-  },
-  logo: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: Colors.text,
-    lineHeight: 34,
-  },
-  heroSubtitle: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  searchContainer: {
-    marginTop: 4,
-  },
-  section: {
-    marginTop: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  seeAll: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary,
-  },
-  horizontalList: {
-    paddingHorizontal: 20,
-  },
-  quickActions: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  quickAction: {
-    alignItems: 'center',
-    width: 72,
-  },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: Colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-  },
-  quickActionEmoji: {
-    fontSize: 28,
-  },
-  quickActionText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.text,
-    textAlign: 'center',
-  },
-  cta: {
-    margin: 20,
-    backgroundColor: Colors.primary,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-  },
-  ctaEmoji: {
-    fontSize: 40,
-    marginBottom: 8,
-  },
-  ctaTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: Colors.white,
-  },
-  ctaText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: 4,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 12,
-    gap: 8,
-  },
-  ctaButtonText: {
-    color: Colors.white,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  miniCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 12,
-    width: 140,
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  miniCardIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  miniCardName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 2,
-  },
-  miniCardCity: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginBottom: 8,
-  },
-  miniCardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  miniCardRating: {
-    fontSize: 11,
-    color: '#666',
-  },
-  miniCardPrice: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
+  safe: { flex: 1, backgroundColor: '#FAF6EA' },
+  container: { flex: 1, backgroundColor: '#FAF6EA' },
+  content: { paddingHorizontal: 16, paddingBottom: 116 },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 8 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 },
+
+  topActions: { flexDirection: 'row', gap: 7, alignItems: 'center' },
+  loginPill: { height: 40, paddingHorizontal: 13, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F26A00', shadowColor: 'rgba(242,106,0,0.22)', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 1, shadowRadius: 22, elevation: 2 },
+  loginText: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
+  draftPill: { height: 40, paddingHorizontal: 12, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFDF8', borderWidth: 1, borderColor: '#D8CBB8' },
+  draftText: { color: '#123D36', fontSize: 12, fontWeight: '900' },
+  navRow: { gap: 8, paddingTop: 16, paddingBottom: 2 },
+  navChip: { borderRadius: 999, borderWidth: 1, borderColor: '#E2D7C6', backgroundColor: '#FFFDF8', paddingHorizontal: 13, paddingVertical: 9, ...webShadow },
+  navChipText: { color: '#123D36', fontSize: 12, fontWeight: '900' },
+  heroSection: { paddingTop: 26 },
+  badge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1, borderColor: '#E9E0D1', backgroundColor: '#FFFDF8', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  badgeText: { color: '#C65F26', fontSize: 11, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase' },
+  heroTitle: { marginTop: 14, color: '#003B2F', fontSize: 42, lineHeight: 42, fontWeight: '900', letterSpacing: -2.3 },
+  heroSubtitle: { marginTop: 14, color: '#46545A', fontSize: 16, lineHeight: 24, fontWeight: '700' },
+  heroActions: { marginTop: 22, gap: 11 },
+  primaryCta: { height: 50, borderRadius: 14, backgroundColor: '#F26A00', flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', shadowColor: 'rgba(242,106,0,0.22)', shadowOffset: { width: 0, height: 14 }, shadowOpacity: 1, shadowRadius: 26, elevation: 3 },
+  primaryCtaText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
+  secondaryCta: { height: 50, borderRadius: 14, backgroundColor: '#FFFDF8', borderWidth: 1, borderColor: '#4F7772', flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' },
+  secondaryCtaText: { color: '#103D3A', fontSize: 15, fontWeight: '900' },
+  heroVisual: { marginTop: 26, height: 238, borderRadius: 30, overflow: 'hidden', borderWidth: 1, borderColor: '#E7DDCC', backgroundColor: '#FFFDF8', ...webShadow },
+  heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  heroOverlay: { position: 'absolute', left: 12, right: 12, bottom: 12, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)', backgroundColor: 'rgba(255,253,248,0.9)', paddingHorizontal: 16, paddingVertical: 12 },
+  overlayKicker: { color: '#C65F26', fontSize: 12, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase' },
+  overlayText: { marginTop: 2, color: '#123D36', fontSize: 14, lineHeight: 19, fontWeight: '900' },
+  serviceGrid: { marginTop: 24, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
+  serviceCard: { width: '30.8%', minHeight: 126, borderRadius: 18, borderWidth: 1, borderColor: '#E7DDCC', backgroundColor: '#FFFDF8', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, paddingVertical: 12, ...webShadow },
+  serviceIcon: { width: 58, height: 58, borderRadius: 999, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  serviceEmoji: { fontSize: 28, lineHeight: 32, textAlign: 'center' },
+  serviceTitle: { color: '#14231D', fontSize: 12, lineHeight: 16, fontWeight: '900', textAlign: 'center' },
+  activityBox: { marginTop: 34, borderRadius: 28, borderWidth: 1, borderColor: '#E7DDCC', backgroundColor: 'rgba(255,247,236,0.74)', padding: 14, ...webShadow },
+  sectionHeadRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 14 },
+  eyebrow: { color: '#C65F26', fontSize: 11, fontWeight: '900', letterSpacing: 1.4, textTransform: 'uppercase' },
+  sectionTitle: { color: '#003B2F', fontSize: 30, lineHeight: 34, fontWeight: '900', letterSpacing: -1.5 },
+  allPill: { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#FFFDF8', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
+  allPillText: { color: '#C65F26', fontSize: 13, fontWeight: '900' },
+  activityGrid: { gap: 12 },
+  activityCard: { borderRadius: 22, borderWidth: 1, borderColor: '#E7DDCC', backgroundColor: '#FFFDF8', padding: 12, flexDirection: 'row', gap: 12, ...webShadow },
+  activityImage: { width: 74, height: 74, borderRadius: 18, resizeMode: 'cover' },
+  activityImageFallback: { width: 74, height: 74, borderRadius: 18, backgroundColor: '#FBE9DB', alignItems: 'center', justifyContent: 'center' },
+  activityCopy: { flex: 1, minWidth: 0 },
+  activityMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5 },
+  tag: { overflow: 'hidden', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 10, fontWeight: '900', letterSpacing: 0.7 },
+  time: { color: '#66736D', fontSize: 11, fontWeight: '800' },
+  activityTitle: { color: '#15241E', fontSize: 15, lineHeight: 19, fontWeight: '900' },
+  activityText: { marginTop: 5, color: '#5A6963', fontSize: 12, lineHeight: 18, fontWeight: '600' },
+  locationRow: { marginTop: 7, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  locationText: { color: '#C65F26', fontSize: 11, fontWeight: '900' },
+  sectionHeadSimple: { marginTop: 28, marginBottom: 14 },
+  quickStack: { gap: 12 },
+  quickCard: { position: 'relative', overflow: 'hidden', borderRadius: 22, borderWidth: 1, borderColor: '#E7DDCC', backgroundColor: '#FFFDF8', padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12, ...webShadow },
+  quickBubble: { position: 'absolute', right: -32, top: -32, width: 96, height: 96, borderRadius: 999, backgroundColor: 'rgba(251,233,219,0.7)' },
+  quickIcon: { width: 48, height: 48, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  quickCopy: { flex: 1, minWidth: 0 },
+  quickTitle: { color: '#17231D', fontSize: 16, lineHeight: 20, fontWeight: '900' },
+  quickText: { marginTop: 6, color: '#5A6963', fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  trustGrid: { marginTop: 28, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  trustCard: { width: '48.1%', borderRadius: 22, borderWidth: 1, borderColor: '#E7DDCC', backgroundColor: 'rgba(255,253,248,0.9)', padding: 16, ...webShadow },
+  trustTitle: { marginTop: 12, color: '#003B2F', fontSize: 14, lineHeight: 20, fontWeight: '900' },
+  trustText: { marginTop: 3, color: '#65746E', fontSize: 12, lineHeight: 16, fontWeight: '700' },
 });

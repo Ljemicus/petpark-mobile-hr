@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../lib/colors';
 import { useAuth } from '../lib/auth-context';
 import Button from '../components/Button';
+import PetParkLogo from '../components/PetParkLogo';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.content}>
-        <Text style={styles.emoji}>🐾</Text>
+        <PetParkLogo width={190} style={styles.logo} />
         <Text style={styles.title}>Prijava</Text>
         <Text style={styles.subtitle}>Dobrodošli natrag u PetPark!</Text>
 
@@ -109,9 +110,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emoji: {
-    fontSize: 48,
-    marginBottom: 12,
+  logo: {
+    marginBottom: 18,
   },
   title: {
     fontSize: 28,

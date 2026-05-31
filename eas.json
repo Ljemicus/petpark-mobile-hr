@@ -1,40 +1,36 @@
 {
   "cli": {
-    "version": ">= 3.0.0",
-    "appVersionSource": "local"
+    "version": ">= 15.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
-    "preview": {
+    "development": {
+      "developmentClient": true,
       "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
       "ios": {
         "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
-      "android": {
-        "buildType": "app-bundle"
-      },
-      "ios": {
-        "autoIncrement": true,
-        "credentialsSource": "remote"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleId": "ljemicus@icloud.com",
-        "appleTeamId": "WU2JPA6AY5",
-        "ascApiKeyId": "VLUNPFSGAD",
-        "ascApiKeyIssuerId": "19908cd6-e848-4824-8ff8-6ac68f87c429",
-        "ascApiKeyPath": "./credentials/AuthKey_VLUNPFSGAD.p8",
-        "ascAppId": "6761323834"
-      },
-      "android": {
-        "track": "production"
+        "ascAppId": "YOUR_APP_STORE_ID"
       }
     }
   }

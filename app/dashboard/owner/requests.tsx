@@ -16,7 +16,10 @@ export default function OwnerRequestsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
     setError(null);
     try {
       setRequests(await getOwnerBookingRequests());

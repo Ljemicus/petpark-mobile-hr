@@ -1,16 +1,17 @@
 import { supabase } from './supabase';
 import {
   Sitter,
-  Product,
   ForumTopic,
   sitters as mockSitters,
-  products as mockProducts,
   forumTopics as mockForumTopics,
 } from './mock-data';
+import type { Pet, PetPassport, PetWithPassport, Appointment, PetDocument } from './types';
 
 interface SitterFilters {
   city?: string;
   search?: string;
+  service?: string;
+  minRating?: number;
 }
 
 export async function getSitters(filters?: SitterFilters): Promise<Sitter[]> {
@@ -40,6 +41,14 @@ export async function getSitters(filters?: SitterFilters): Promise<Sitter[]> {
       query = query.or(
         `bio.ilike.%${filters.search}%,users.full_name.ilike.%${filters.search}%`
       );
+    }
+
+    if (filters?.service && filters.service !== 'Sve') {
+      query = query.contains('services', [filters.service]);
+    }
+
+    if (filters?.minRating && filters.minRating > 0) {
+      query = query.gte('rating', filters.minRating);
     }
 
     const { data, error } = await query;
@@ -72,6 +81,13 @@ export async function getSitters(filters?: SitterFilters): Promise<Sitter[]> {
           s.name.toLowerCase().includes(q) ||
           s.services.some((svc) => svc.toLowerCase().includes(q))
       );
+    }
+    if (filters?.service && filters.service !== 'Sve') {
+      const selected = filters.service.toLowerCase();
+      result = result.filter((s) => s.services.some((svc) => svc.toLowerCase().includes(selected)));
+    }
+    if (filters?.minRating && filters.minRating > 0) {
+      result = result.filter((s) => s.rating >= filters.minRating!);
     }
     return result;
   }
@@ -117,11 +133,6 @@ export async function getSitterById(id: string): Promise<Sitter | null> {
     // Fallback na mock podatke
     return mockSitters.find((s) => s.id === id) ?? null;
   }
-}
-
-// Shop ostaje mock (Supabase nema te tablice još)
-export async function getProducts(): Promise<Product[]> {
-  return mockProducts;
 }
 
 // ─── Admin: Verification Queue ───────────────────────────────────────
@@ -199,4 +210,161 @@ export async function setSitterVerification(
 // Forum ostaje mock (Supabase nema te tablice još)
 export async function getForumTopics(): Promise<ForumTopic[]> {
   return mockForumTopics;
+}
+
+// ─── Pet Passport ───────────────────────────────────────────────────
+
+export async function getOwnerPets(ownerId: string): Promise<Pet[]> {
+  try {
+    const { data, error } = await supabase
+      .from('pets')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getPetById(petId: string): Promise<Pet | null> {
+  try {
+    const { data, error } = await supabase
+      .from('pets')
+      .select('*')
+      .eq('id', petId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export async function getPetPassport(petId: string): Promise<PetPassport | null> {
+  try {
+    const { data, error } = await supabase
+      .from('pet_passports')
+      .select('*')
+      .eq('pet_id', petId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    if (data) {
+      return {
+        pet_id: data.pet_id,
+        vaccinations: data.vaccinations || [],
+        allergies: data.allergies || [],
+        medications: data.medications || [],
+        vet_info: data.vet_info || { name: '', phone: '', address: '', emergency: false },
+        notes: data.notes || '',
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getPetWithPassport(petId: string): Promise<PetWithPassport | null> {
+  try {
+    const [pet, passport] = await Promise.all([
+      getPetById(petId),
+      getPetPassport(petId),
+    ]);
+
+    if (!pet) return null;
+
+    return {
+      ...pet,
+      passport: passport || {
+        pet_id: petId,
+        vaccinations: [],
+        allergies: [],
+        medications: [],
+        vet_info: { name: '', phone: '', address: '', emergency: false },
+        notes: '',
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function savePetPassport(
+  petId: string,
+  passport: Partial<PetPassport>
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('pet_passports')
+      .upsert({
+        pet_id: petId,
+        ...passport,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'pet_id',
+      });
+
+    if (error) throw error;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function getPetAppointments(petId: string): Promise<Appointment[]> {
+  try {
+    const { data, error } = await supabase
+      .from('pet_appointments')
+      .select('*')
+      .eq('pet_id', petId)
+      .order('date', { ascending: true })
+      .limit(10);
+
+    if (error) throw error;
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getUpcomingAppointments(ownerId: string): Promise<Appointment[]> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('pet_appointments')
+      .select(`
+        *,
+        pets!inner(owner_id)
+      `)
+      .eq('pets.owner_id', ownerId)
+      .gte('date', today)
+      .eq('status', 'upcoming')
+      .order('date', { ascending: true })
+      .limit(20);
+
+    if (error) throw error;
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getPetDocuments(petId: string): Promise<PetDocument[]> {
+  try {
+    const { data, error } = await supabase
+      .from('pet_documents')
+      .select('*')
+      .eq('pet_id', petId)
+      .order('uploaded_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch {
+    return [];
+  }
 }

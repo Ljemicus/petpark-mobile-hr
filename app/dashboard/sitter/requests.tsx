@@ -15,7 +15,10 @@ export default function SitterRequestsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
     setError(null);
     try {
       setRequests(await getProviderBookingRequests());

@@ -21,7 +21,10 @@ export default function NotificationsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
     setError(null);
     try {
       setNotifications(await getInAppNotifications());
@@ -50,18 +53,18 @@ export default function NotificationsScreen() {
     else load();
   }
 
-  if (authLoading || loading) return <BookingRequestScreenShell title="Obavijesti"><ActivityIndicator color={Colors.orangePrimary} /></BookingRequestScreenShell>;
+  if (authLoading || loading) return <BookingRequestScreenShell title="In-app obavijesti"><ActivityIndicator color={Colors.orangePrimary} /></BookingRequestScreenShell>;
 
   if (!isLoggedIn) {
     return (
-      <BookingRequestScreenShell title="Obavijesti">
-        <PetParkEmptyState title="Prijava je potrebna" body="Prijavi se za pregled svojih PetPark obavijesti." actionLabel="Prijava" onAction={() => router.push('/login')} />
+      <BookingRequestScreenShell title="In-app obavijesti">
+        <PetParkEmptyState title="Prijava je potrebna" body="Prijavi se za pregled svojih PetPark obavijesti." actionLabel="Prijavi se" onAction={() => router.push('/login')} />
       </BookingRequestScreenShell>
     );
   }
 
   return (
-    <BookingRequestScreenShell title="Obavijesti">
+    <BookingRequestScreenShell title="In-app obavijesti">
       <PetParkInfoCallout body="Ovo su samo in-app obavijesti. PetPark ovdje ne šalje SMS, WhatsApp, e-mail ni push poruke." tone="sage" />
       {error ? <PetParkInfoCallout title="Greška" body={error} tone="danger" /> : null}
       {!notifications.length ? <PetParkEmptyState title="Nema obavijesti" body="Kad se pojavi novi upit ili poruka, vidjet ćeš ih ovdje." onAction={load} actionLabel="Osvježi" /> : null}

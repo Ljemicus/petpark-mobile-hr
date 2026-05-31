@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../lib/colors';
 import { useAuth } from '../lib/auth-context';
 import Button from '../components/Button';
+import PetParkLogo from '../components/PetParkLogo';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.emoji}>🐾</Text>
+        <PetParkLogo width={190} style={styles.logo} />
         <Text style={styles.title}>Registracija</Text>
         <Text style={styles.subtitle}>Kreirajte svoj PetPark račun</Text>
 
@@ -143,10 +144,9 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
   },
-  emoji: {
-    fontSize: 48,
-    marginBottom: 12,
+  logo: {
     marginTop: 20,
+    marginBottom: 18,
   },
   title: {
     fontSize: 28,

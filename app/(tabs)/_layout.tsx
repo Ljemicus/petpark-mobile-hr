@@ -1,24 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+
 import { Colors } from '../../lib/colors';
-import { useCart } from '../../lib/cart-context';
-
-function CartTabIcon({ color, size }: { color: string; size: number }) {
-  const { getItemCount } = useCart();
-  const count = getItemCount();
-
-  return (
-    <View>
-      <Ionicons name="storefront-outline" size={size} color={color} />
-      {count > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{count}</Text>
-        </View>
-      )}
-    </View>
-  );
-}
+import PetParkLogo from '../../components/PetParkLogo';
 
 export default function TabLayout() {
   return (
@@ -27,19 +11,21 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.muted,
         tabBarStyle: {
-          backgroundColor: Colors.white,
-          borderTopColor: Colors.border,
+          backgroundColor: Colors.creamSurface,
+          borderTopColor: Colors.warmBorder,
           height: 88,
           paddingBottom: 30,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontWeight: '800',
         },
-        headerStyle: { backgroundColor: Colors.white },
+        headerStyle: { backgroundColor: Colors.creamSurface },
         headerTintColor: Colors.text,
-        headerTitleStyle: { fontWeight: '700' },
+        headerTitleStyle: { fontWeight: '900' },
+        headerTitle: () => <PetParkLogo width={124} />,
+        headerTitleAlign: 'center',
       }}
     >
       <Tabs.Screen
@@ -53,25 +39,22 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Pretraga',
-          tabBarIcon: ({ color, size }) => <Ionicons name="search-outline" size={size} color={color} />,
-          headerTitle: 'Pretraži sittere',
+          title: 'Usluge',
+          tabBarIcon: ({ color, size }) => <Ionicons name="paw-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="shop"
+        name="requests"
         options={{
-          title: 'Shop',
-          tabBarIcon: ({ color, size }) => <CartTabIcon color={color} size={size} />,
-          headerTitle: 'PetPark Shop',
+          title: 'Upiti',
+          tabBarIcon: ({ color, size }) => <Ionicons name="clipboard-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="forum"
+        name="notifications"
         options={{
-          title: 'Forum',
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles-outline" size={size} color={color} />,
-          headerTitle: 'Forum',
+          title: 'Obavijesti',
+          tabBarIcon: ({ color, size }) => <Ionicons name="notifications-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -79,29 +62,11 @@ export default function TabLayout() {
         options={{
           title: 'Profil',
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
-          headerTitle: 'Moj profil',
         }}
       />
+      <Tabs.Screen name="forum" options={{ href: null }} />
+      <Tabs.Screen name="shop" options={{ href: null }} />
+      <Tabs.Screen name="pet-shops" options={{ href: null }} />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    position: 'absolute',
-    right: -8,
-    top: -4,
-    backgroundColor: Colors.primary,
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: Colors.white,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-});

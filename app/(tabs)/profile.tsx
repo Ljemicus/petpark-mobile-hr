@@ -4,7 +4,9 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
 import { useAuth } from '../../lib/auth-context';
+import { DASHBOARD_LINKS, getPrimaryDashboardRoute } from '../../lib/navigation';
 import Button from '../../components/Button';
+import PetParkLogo from '../../components/PetParkLogo';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -18,49 +20,59 @@ export default function ProfileScreen() {
 
   if (!isLoggedIn) {
     return (
-      <View style={styles.container}>
-        <View style={styles.guestContainer}>
-          <Text style={styles.guestEmoji}>🐾</Text>
-          <Text style={styles.guestTitle}>Dobrodošli u PetPark!</Text>
-          <Text style={styles.guestSubtitle}>Prijavite se za pristup svim funkcionalnostima</Text>
+      <ScrollView style={styles.container} contentContainerStyle={styles.guestContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.guestHero}>
+          <PetParkLogo width={190} style={styles.guestLogo} />
+          <Text style={styles.guestTitle}>Dobrodošao/la u PetPark.</Text>
+          <Text style={styles.guestSubtitle}>Prijavi se za upite, obavijesti, razgovore i svoj PetPark profil.</Text>
 
           <View style={styles.authButtons}>
             <Button title="Prijavi se" onPress={() => router.push('/login')} size="large" style={styles.fullWidth} />
             <Button title="Registriraj se" onPress={() => router.push('/register')} variant="outline" size="large" style={styles.fullWidth} />
           </View>
+        </View>
 
-          <View style={styles.socialDivider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ili nastavi s</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.socialButtons}>
-            <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
-              <Ionicons name="logo-apple" size={24} color={Colors.text} />
-              <Text style={styles.socialText}>Apple</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
-              <Ionicons name="logo-google" size={24} color="#DB4437" />
-              <Text style={styles.socialText}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
-              <Ionicons name="logo-facebook" size={24} color="#4267B2" />
-              <Text style={styles.socialText}>Facebook</Text>
-            </TouchableOpacity>
+        <View style={styles.guestNote}>
+          <Ionicons name="shield-checkmark-outline" size={20} color={Colors.teal} />
+          <View style={styles.guestNoteCopy}>
+            <Text style={styles.guestNoteTitle}>Jedan račun za cijelu zajednicu</Text>
+            <Text style={styles.guestNoteText}>Usluge, upozorenja, forum i poruke ostaju na jednom mjestu.</Text>
           </View>
         </View>
-      </View>
+
+        <View style={styles.socialDivider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>uskoro</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <View style={styles.socialButtons}>
+          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem Apple računa dolazi uskoro.')}>
+            <Ionicons name="logo-apple" size={21} color={Colors.text} />
+            <Text style={styles.socialText}>Apple</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem Google računa dolazi uskoro.')}>
+            <Ionicons name="logo-google" size={21} color="#DB4437" />
+            <Text style={styles.socialText}>Google</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     );
   }
 
+  const primaryDashboardRoute = getPrimaryDashboardRoute(user);
+
   const menuItems = [
-    { icon: 'grid-outline' as const, label: 'Dashboard', route: '/(tabs)' },
-    { icon: 'chatbubble-outline' as const, label: 'Poruke', route: '/(tabs)' },
-    { icon: 'heart-outline' as const, label: 'Favoriti', route: '/(tabs)' },
-    { icon: 'card-outline' as const, label: 'Narudžbe', route: '/cart' },
+    { icon: 'grid-outline' as const, label: 'Dashboard', route: primaryDashboardRoute },
+    { icon: 'paw-outline' as const, label: 'Moji ljubimci', route: '/dashboard/owner/pets' },
+    { icon: 'calendar-outline' as const, label: 'Moje rezervacije', route: '/dashboard/owner/bookings' },
+    { icon: 'chatbubble-outline' as const, label: 'Poruke', route: '/chat' },
+    { icon: 'cash-outline' as const, label: 'Povijest plaćanja', route: '/payments/history' },
+    { icon: 'card' as const, label: 'Načini plaćanja', route: '/payments/methods' },
     { icon: 'settings-outline' as const, label: 'Postavke', route: '/(tabs)' },
   ];
+
+  const providerDashboards = DASHBOARD_LINKS;
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -149,6 +161,18 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
+      <View style={styles.dashboardSwitcher}>
+        <Text style={styles.dashboardSwitcherTitle}>Dashboardi</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dashboardChips}>
+          {providerDashboards.map((item) => (
+            <TouchableOpacity key={item.label} style={styles.dashboardChip} onPress={() => router.push(item.route as any)}>
+              <Ionicons name={item.icon} size={16} color={Colors.primary} />
+              <Text style={styles.dashboardChipText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       {/* Menu */}
       <View style={styles.menu}>
         {menuItems.map((item) => (
@@ -170,7 +194,7 @@ export default function ProfileScreen() {
 
       {/* Footer Links */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerLink} onPress={() => router.push('/messages' as any)}>
+        <TouchableOpacity style={styles.footerLink} onPress={() => router.push('/chat' as any)}>
           <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.primary} />
           <Text style={styles.footerLinkText}>Chat podrška</Text>
         </TouchableOpacity>
@@ -196,27 +220,62 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  guestContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
+  guestContent: {
+    padding: 16,
+    paddingBottom: 116,
   },
-  guestEmoji: {
-    fontSize: 64,
-    marginBottom: 16,
+  guestHero: {
+    alignItems: 'center',
+    padding: 22,
+    borderRadius: 30,
+    backgroundColor: Colors.warmSurface,
+    borderWidth: 1,
+    borderColor: Colors.warmBorder,
+    marginTop: 8,
+  },
+  guestLogo: {
+    marginBottom: 18,
   },
   guestTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 26,
+    lineHeight: 31,
+    fontWeight: '900',
     color: Colors.text,
     marginBottom: 8,
+    textAlign: 'center',
+    letterSpacing: -0.7,
   },
   guestSubtitle: {
     fontSize: 15,
+    lineHeight: 22,
     color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 22,
+  },
+  guestNote: {
+    marginTop: 12,
+    backgroundColor: Colors.creamSurface,
+    borderWidth: 1,
+    borderColor: Colors.warmBorder,
+    borderRadius: 24,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  guestNoteCopy: {
+    flex: 1,
+  },
+  guestNoteTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: Colors.text,
+  },
+  guestNoteText: {
+    marginTop: 2,
+    fontSize: 12,
+    lineHeight: 17,
+    color: Colors.textSecondary,
   },
   authButtons: {
     width: '100%',
@@ -243,16 +302,20 @@ const styles = StyleSheet.create({
   },
   socialButtons: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 10,
   },
   socialButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
+    backgroundColor: Colors.creamSurface,
+    borderWidth: 1,
+    borderColor: Colors.warmBorder,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderRadius: 18,
   },
   socialText: {
     fontSize: 14,
@@ -413,6 +476,35 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     flex: 1,
     lineHeight: 18,
+  },
+  dashboardSwitcher: {
+    marginTop: 18,
+    marginHorizontal: 20,
+  },
+  dashboardSwitcherTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 10,
+  },
+  dashboardChips: {
+    gap: 10,
+  },
+  dashboardChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+  },
+  dashboardChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary,
   },
   menu: {
     marginTop: 20,
