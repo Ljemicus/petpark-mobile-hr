@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from './mock-data';
+import type { User } from './domain-types';
 import { supabase } from './supabase';
 import type { Session } from '@supabase/supabase-js';
 

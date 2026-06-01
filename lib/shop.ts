@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { PAYMENT_DISABLED_MESSAGE, PAYMENT_DISABLED_TITLE, PAYMENTS_ENABLED } from './payments/config';
 
 export type ProductCategory = 'hrana' | 'igracke' | 'povodci' | 'krevetici' | 'posude' | 'njega' | 'odjeca' | 'grickalice';
 
@@ -259,6 +260,14 @@ export async function loadCartFromSupabase(userId: string): Promise<CartItem[]> 
 }
 
 export async function createShopCheckout(items: CartItem[], authToken?: string | null) {
+  if (!PAYMENTS_ENABLED) {
+    return {
+      disabled: true,
+      title: PAYMENT_DISABLED_TITLE,
+      message: PAYMENT_DISABLED_MESSAGE,
+    } as const;
+  }
+
   const response = await fetch('https://petpark.hr/api/payments/create-checkout', {
     method: 'POST',
     headers: {

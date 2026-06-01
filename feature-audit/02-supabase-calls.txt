@@ -1,0 +1,15 @@
+app/chat/index.tsx:85:supabase.auth.
+app/chat/[userId].tsx:109:supabase.auth.
+app/pet-passport/index.tsx:27:supabase.auth.
+lib/shop.ts:220:supabase.from('cart_items')
+lib/shop.ts:222:supabase.from('cart_items')
+lib/auth-context.tsx:73:supabase.auth.
+lib/auth-context.tsx:88:supabase.auth.
+lib/auth-context.tsx:100:supabase.auth.
+lib/auth-context.tsx:110:supabase.auth.
+lib/auth-context.tsx:135:supabase.auth.
+lib/auth-context.tsx:199:supabase.auth.
+lib/sitter-dashboard-db.ts:165:supabase.from('availability')
+lib/sitter-dashboard-db.ts:193:supabase.from('availability')
+lib/api/client.ts:34:supabase.auth.
+lib/upload.ts:47:supabase.storage.

@@ -1,34 +1,92 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Colors } from '../../lib/colors';
-import { forumCategories, forumTopics } from '../../lib/mock-data';
+import type { ForumCategory, ForumTopic } from '../../lib/domain-types';
+import { getForumCategories, getForumTopics } from '../../lib/db';
 import ForumTopicCard from '../../components/ForumTopicCard';
 
 export default function ForumScreen() {
+  const [categories, setCategories] = useState<ForumCategory[]>([]);
+  const [topics, setTopics] = useState<ForumTopic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      setError(null);
+      const [nextCategories, nextTopics] = await Promise.all([
+        getForumCategories(),
+        getForumTopics(),
+      ]);
+      setCategories(nextCategories);
+      setTopics(nextTopics);
+    } catch {
+      setError('Forum trenutno nije dostupan. Pokušajte ponovno.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={Colors.primary} />
+        <Text style={styles.helperText}>Učitavam forum...</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Categories */}
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
+    >
+      {error && (
+        <View style={styles.noticeCard}>
+          <Text style={styles.noticeTitle}>Greška</Text>
+          <Text style={styles.noticeText}>{error}</Text>
+        </View>
+      )}
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Kategorije</Text>
-        <View style={styles.categoriesGrid}>
-          {forumCategories.map((cat) => (
-            <TouchableOpacity key={cat.id} style={styles.categoryCard}>
-              <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-              <View style={styles.categoryInfo}>
-                <Text style={styles.categoryName}>{cat.name}</Text>
-                <Text style={styles.categoryCount}>{cat.topicCount} tema</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {categories.length === 0 ? (
+          <View style={styles.noticeCard}>
+            <Text style={styles.noticeTitle}>Još nema kategorija</Text>
+            <Text style={styles.noticeText}>Forum će se prikazati čim se sinkroniziraju podaci.</Text>
+          </View>
+        ) : (
+          <View style={styles.categoriesGrid}>
+            {categories.map((cat) => (
+              <TouchableOpacity key={cat.id} style={styles.categoryCard}>
+                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                <View style={styles.categoryInfo}>
+                  <Text style={styles.categoryName}>{cat.name}</Text>
+                  <Text style={styles.categoryCount}>{cat.topicCount} tema</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
-      {/* Popular Topics */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Popularne teme</Text>
-        {forumTopics.map((topic) => (
-          <ForumTopicCard key={topic.id} topic={topic} />
-        ))}
+        {topics.length === 0 ? (
+          <View style={styles.noticeCard}>
+            <Text style={styles.noticeTitle}>Još nema tema</Text>
+            <Text style={styles.noticeText}>Budi prvi koji će otvoriti temu za PetPark zajednicu.</Text>
+          </View>
+        ) : (
+          topics.map((topic) => <ForumTopicCard key={topic.id} topic={topic} />)
+        )}
       </View>
 
       <View style={{ height: 20 }} />
@@ -40,6 +98,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+    gap: 10,
+  },
+  helperText: {
+    color: Colors.textSecondary,
   },
   section: {
     marginTop: 16,
@@ -80,5 +148,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.muted,
     marginTop: 2,
+  },
+  noticeCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 16,
+  },
+  noticeTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  noticeText: {
+    marginTop: 4,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 18,
   },
 });

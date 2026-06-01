@@ -1,26 +1,48 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
-import { forumTopics } from '../../lib/mock-data';
-
-const demoReplies = [
-  { id: '1', author: 'Dr. Vera M.', text: 'Preporučujem posjet veterinaru ako traje dulje od 24 sata. Može biti mnogo uzroka.', time: 'Prije 1 sat', isExpert: true },
-  { id: '2', author: 'Petar K.', text: 'Moj pas je imao isto, pokazalo se da je bio problem sa zubima.', time: 'Prije 2 sata', isExpert: false },
-  { id: '3', author: 'Ana T.', text: 'Probajte zagrijati hranu ili dodati malo pileće juhe. Ponekad promjena temperature pomaže.', time: 'Prije 3 sata', isExpert: false },
-  { id: '4', author: 'Marina S.', text: 'Je li cijepljen nedavno? Ponekad nakon cijepljenja mogu biti neraspoloženi dan-dva.', time: 'Prije 4 sata', isExpert: false },
-];
+import type { ForumReply, ForumTopic } from '../../lib/domain-types';
+import { getForumReplies, getForumTopicById } from '../../lib/db';
 
 export default function TopicDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [reply, setReply] = useState('');
-  const topic = forumTopics.find((t) => t.id === id);
+  const [topic, setTopic] = useState<ForumTopic | null>(null);
+  const [replies, setReplies] = useState<ForumReply[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!id) return;
+      const [nextTopic, nextReplies] = await Promise.all([
+        getForumTopicById(id),
+        getForumReplies(id),
+      ]);
+      if (!mounted) return;
+      setTopic(nextTopic);
+      setReplies(nextReplies);
+      setLoading(false);
+    })();
+    return () => { mounted = false; };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={Colors.primary} />
+        <Text style={styles.mutedText}>Učitavam temu...</Text>
+      </View>
+    );
+  }
 
   if (!topic) {
     return (
       <View style={styles.center}>
-        <Text>Tema nije pronađena</Text>
+        <Text style={styles.emptyTitle}>Tema nije pronađena</Text>
+        <Text style={styles.mutedText}>Možda je obrisana ili trenutno nije dostupna.</Text>
       </View>
     );
   }
@@ -28,7 +50,6 @@ export default function TopicDetailScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Topic */}
         <View style={styles.topicCard}>
           <Text style={styles.topicTitle}>{topic.title}</Text>
           <Text style={styles.topicPreview}>{topic.preview}</Text>
@@ -38,41 +59,46 @@ export default function TopicDetailScreen() {
           </View>
         </View>
 
-        {/* Replies */}
         <View style={styles.replies}>
           <Text style={styles.repliesTitle}>Odgovori ({topic.replyCount})</Text>
-          {demoReplies.map((r) => (
-            <View key={r.id} style={styles.replyCard}>
-              <View style={styles.replyHeader}>
-                <View style={styles.replyAuthorRow}>
-                  <Text style={styles.replyAuthor}>{r.author}</Text>
-                  {r.isExpert && (
-                    <View style={styles.expertBadge}>
-                      <Text style={styles.expertText}>Stručnjak</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.replyTime}>{r.time}</Text>
-              </View>
-              <Text style={styles.replyText}>{r.text}</Text>
-              <View style={styles.replyActions}>
-                <TouchableOpacity style={styles.replyAction}>
-                  <Ionicons name="heart-outline" size={16} color={Colors.muted} />
-                  <Text style={styles.replyActionText}>Sviđa mi se</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.replyAction}>
-                  <Ionicons name="chatbubble-outline" size={16} color={Colors.muted} />
-                  <Text style={styles.replyActionText}>Odgovori</Text>
-                </TouchableOpacity>
-              </View>
+          {replies.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>Još nema odgovora</Text>
+              <Text style={styles.mutedText}>Budi prvi koji će pomoći u ovoj temi.</Text>
             </View>
-          ))}
+          ) : (
+            replies.map((r) => (
+              <View key={r.id} style={styles.replyCard}>
+                <View style={styles.replyHeader}>
+                  <View style={styles.replyAuthorRow}>
+                    <Text style={styles.replyAuthor}>{r.author}</Text>
+                    {r.isExpert && (
+                      <View style={styles.expertBadge}>
+                        <Text style={styles.expertText}>Stručnjak</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.replyTime}>{r.time}</Text>
+                </View>
+                <Text style={styles.replyText}>{r.text}</Text>
+                <View style={styles.replyActions}>
+                  <TouchableOpacity style={styles.replyAction}>
+                    <Ionicons name="heart-outline" size={16} color={Colors.muted} />
+                    <Text style={styles.replyActionText}>Sviđa mi se</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.replyAction}>
+                    <Ionicons name="chatbubble-outline" size={16} color={Colors.muted} />
+                    <Text style={styles.replyActionText}>Odgovori</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* Reply input */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -82,7 +108,7 @@ export default function TopicDetailScreen() {
           onChangeText={setReply}
           multiline
         />
-        <TouchableOpacity style={styles.sendButton}>
+        <TouchableOpacity style={[styles.sendButton, !reply.trim() && styles.sendButtonDisabled]} disabled={!reply.trim()}>
           <Ionicons name="send" size={20} color={Colors.white} />
         </TouchableOpacity>
       </View>
@@ -99,6 +125,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: Colors.background,
+    padding: 24,
+  },
+  mutedText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.text,
   },
   scroll: {
     flex: 1,
@@ -149,6 +188,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
+  emptyCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
   replyHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -182,13 +228,13 @@ const styles = StyleSheet.create({
   },
   replyText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: Colors.text,
     lineHeight: 20,
   },
   replyActions: {
     flexDirection: 'row',
-    gap: 20,
-    marginTop: 10,
+    gap: 16,
+    marginTop: 12,
   },
   replyAction: {
     flexDirection: 'row',
@@ -203,20 +249,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 12,
-    paddingBottom: 30,
     backgroundColor: Colors.white,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    gap: 10,
+    gap: 8,
   },
   input: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.background,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    fontSize: 15,
     maxHeight: 100,
+    fontSize: 14,
     color: Colors.text,
   },
   sendButton: {
@@ -226,5 +271,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sendButtonDisabled: {
+    opacity: 0.45,
   },
 });

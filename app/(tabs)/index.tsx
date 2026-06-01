@@ -97,7 +97,7 @@ export default function HomeScreen() {
             <TouchableOpacity style={styles.loginPill} onPress={() => push(isLoggedIn ? dashboardRoute : '/login')}>
               <Text style={styles.loginText}>{isLoggedIn ? 'Profil' : 'Prijava'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.draftPill} onPress={() => push('/objavi-uslugu')}>
+            <TouchableOpacity style={styles.draftPill} onPress={() => push(isLoggedIn ? dashboardRoute : '/onboarding')}>
               <Text style={styles.draftText}>Spremi nacrt</Text>
             </TouchableOpacity>
           </View>

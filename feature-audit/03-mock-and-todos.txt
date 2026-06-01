@@ -1,0 +1,123 @@
+Files importing mock-data:
+
+TODO / FIXME / not implemented / placeholder markers:
+app/payments/checkout.tsx:263:          <Text style={styles.infoTitle}>{PAYMENTS_ENABLED ? 'Što slijedi nakon plaćanja?' : 'Plaćanje uskoro'}</Text>
+app/payments/checkout.tsx:299:                ? 'Plaćanje uskoro'
+app/walk/active.tsx:230:            placeholder="Npr. Pas je bio veseo, pili smo vodu u parku..."
+app/walk/active.tsx:267:      <View style={styles.mapPlaceholder}>
+app/walk/active.tsx:1053:  mapPlaceholder: {
+app/walk/[id].tsx:250:        {/* Map Placeholder */}
+app/login.tsx:45:              placeholder="vas@email.com"
+app/login.tsx:46:              placeholderTextColor={Colors.muted}
+app/login.tsx:58:              placeholder="Unesite lozinku"
+app/login.tsx:59:              placeholderTextColor={Colors.muted}
+app/login.tsx:80:          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
+app/login.tsx:84:          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
+app/login.tsx:88:          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.')}>
+app/chat/new-chat.tsx:38:            placeholder="Pretraži sittere, groomere, korisnike..."
+app/chat/new-chat.tsx:39:            placeholderTextColor={Colors.muted}
+app/chat/[userId].tsx:320:            placeholder="Napišite poruku..."
+app/chat/[userId].tsx:321:            placeholderTextColor={Colors.muted}
+app/booking/[sitterId].tsx:406:          placeholder="Npr. Moj pas treba posebnu hranu, voli igrati s lopticama..."
+app/booking/[sitterId].tsx:407:          placeholderTextColor={Colors.muted}
+app/booking/[sitterId].tsx:756:        <View style={styles.placeholder} />
+app/booking/[sitterId].tsx:928:  placeholder: {
+app/booking/my-bookings.tsx:151:        <View style={styles.placeholder} />
+app/booking/my-bookings.tsx:256:  placeholder: {
+app/pet-passport/[id].tsx:348:                              {expired ? 'ISTEKLO' : expiringSoon ? 'Istiće uskoro' : 'Važeće'}
+app/pet-passport/[id].tsx:480:                placeholder="npr. VetCentar Zagreb"
+app/pet-passport/[id].tsx:481:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:489:                placeholder="+385 1 123 4567"
+app/pet-passport/[id].tsx:490:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:499:                placeholder="Ulica i broj, grad"
+app/pet-passport/[id].tsx:500:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:543:                placeholder="Ovdje možete zapisati bilo koje dodatne informacije o svom ljubimcu..."
+app/pet-passport/[id].tsx:544:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:649:                placeholder="npr. Rabies, DHPP, Bordetella..."
+app/pet-passport/[id].tsx:650:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:658:                placeholder="YYYY-MM-DD"
+app/pet-passport/[id].tsx:659:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:667:                placeholder="Ime veterinara ili klinike"
+app/pet-passport/[id].tsx:668:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:676:                placeholder="YYYY-MM-DD"
+app/pet-passport/[id].tsx:677:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:704:                placeholder="npr. Piletina, pelud, krpelji..."
+app/pet-passport/[id].tsx:705:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:734:                placeholder="Simptomi, liječenje..."
+app/pet-passport/[id].tsx:735:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:762:                placeholder="npr. Rimadyl, Frontline..."
+app/pet-passport/[id].tsx:763:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:771:                placeholder="npr. 1 tableta, 5ml..."
+app/pet-passport/[id].tsx:772:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:780:                placeholder="npr. 2x dnevno, svakih 8h..."
+app/pet-passport/[id].tsx:781:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:789:                placeholder="YYYY-MM-DD"
+app/pet-passport/[id].tsx:790:                placeholderTextColor={Colors.muted}
+app/pet-passport/[id].tsx:798:                placeholder="YYYY-MM-DD"
+app/pet-passport/[id].tsx:799:                placeholderTextColor={Colors.muted}
+app/(tabs)/profile.tsx:45:          <Text style={styles.dividerText}>uskoro</Text>
+app/(tabs)/profile.tsx:50:          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem Apple računa dolazi uskoro.')}>
+app/(tabs)/profile.tsx:54:          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem Google računa dolazi uskoro.')}>
+app/shop/basket.tsx:35:      Alert.alert('Plaćanje uskoro', 'Košarica je spremljena lokalno. Online plaćanje bit će dostupno uskoro.');
+app/shop/basket.tsx:96:              <Text style={styles.primaryButtonText}>{paying ? 'Provjeravam...' : 'Plaćanje uskoro'}</Text>
+app/admin/verification.tsx:145:            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+app/admin/verification.tsx:195:                placeholder="Razlog odbijanja ili dodatne napomene..."
+app/admin/verification.tsx:196:                placeholderTextColor={Colors.muted}
+app/admin/verification.tsx:331:  avatarPlaceholder: {
+app/register.tsx:39:    Alert.alert('Uskoro', 'Prijava putem društvenih mreža dolazi uskoro.');
+app/register.tsx:72:              placeholder="Vaše ime"
+app/register.tsx:73:              placeholderTextColor={Colors.muted}
+app/register.tsx:83:              placeholder="vas@email.com"
+app/register.tsx:84:              placeholderTextColor={Colors.muted}
+app/register.tsx:96:              placeholder="Minimalno 8 znakova"
+app/register.tsx:97:              placeholderTextColor={Colors.muted}
+app/topic/[id].tsx:105:          placeholder="Napiši odgovor..."
+app/topic/[id].tsx:106:          placeholderTextColor={Colors.muted}
+app/dashboard/owner/index.tsx:112:              styles.petPlaceholder,
+app/dashboard/owner/index.tsx:176:            <View style={styles.sitterAvatarPlaceholder}>
+app/dashboard/owner/index.tsx:610:  petPlaceholder: {
+app/dashboard/owner/index.tsx:689:  sitterAvatarPlaceholder: {
+app/dashboard/owner/bookings.tsx:70:            <View style={styles.sitterAvatarPlaceholder}>
+app/dashboard/owner/bookings.tsx:220:            placeholder="Kako je protekla usluga?"
+app/dashboard/owner/bookings.tsx:221:            placeholderTextColor={Colors.muted}
+app/dashboard/owner/bookings.tsx:522:  sitterAvatarPlaceholder: {
+app/dashboard/owner/pets.tsx:77:              styles.petPlaceholder,
+app/dashboard/owner/pets.tsx:203:              placeholder="Unesite ime ljubimca"
+app/dashboard/owner/pets.tsx:204:              placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:240:              placeholder="npr. Zlatni retriver"
+app/dashboard/owner/pets.tsx:241:              placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:252:                  placeholder="2"
+app/dashboard/owner/pets.tsx:253:                  placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:263:                  placeholder="15"
+app/dashboard/owner/pets.tsx:264:                  placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:274:              placeholder="Npr. alergije, lijekovi, specijalna dijeta..."
+app/dashboard/owner/pets.tsx:275:              placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:511:  petPlaceholder: {
+app/dashboard/owner/messages.tsx:61:        <View style={styles.conversationAvatarPlaceholder}>
+app/dashboard/owner/messages.tsx:276:            <View style={styles.chatHeaderAvatarPlaceholder}>
+app/dashboard/owner/messages.tsx:310:            placeholder="Napišite poruku..."
+app/dashboard/owner/messages.tsx:311:            placeholderTextColor={Colors.muted}
+app/dashboard/owner/messages.tsx:369:  conversationAvatarPlaceholder: {
+app/dashboard/owner/messages.tsx:475:  chatHeaderAvatarPlaceholder: {
+app/dashboard/groomer/index.tsx:109:            <View style={styles.clientAvatarPlaceholder}>
+app/dashboard/groomer/index.tsx:457:                    <View style={styles.reviewAvatarPlaceholder}>
+app/dashboard/groomer/index.tsx:736:  clientAvatarPlaceholder: {
+app/dashboard/groomer/index.tsx:886:  reviewAvatarPlaceholder: {
+app/dashboard/groomer/earnings.tsx:94:        <View style={styles.placeholder} />
+app/dashboard/groomer/earnings.tsx:225:  placeholder: {
+app/dashboard/groomer/availability.tsx:148:        <View style={styles.placeholder} />
+app/dashboard/groomer/availability.tsx:251:  placeholder: {
+app/dashboard/groomer/bookings.tsx:113:        <View style={styles.placeholder} />
+app/dashboard/groomer/bookings.tsx:160:                      <View style={styles.avatarPlaceholder}>
+app/dashboard/groomer/bookings.tsx:289:  placeholder: {
+app/dashboard/groomer/bookings.tsx:362:  avatarPlaceholder: {
+app/dashboard/groomer/profile.tsx:176:        <View style={styles.placeholder} />
+app/dashboard/groomer/profile.tsx:193:                placeholder="Vaše ime ili naziv salona"
+app/dashboard/groomer/profile.tsx:194:                placeholderTextColor={Colors.muted}
+app/dashboard/groomer/profile.tsx:204:                placeholder="Opišite svoje iskustvo i usluge..."
+app/dashboard/groomer/profile.tsx:205:                placeholderTextColor={Colors.muted}
+app/dashboard/groomer/profile.tsx:235:                placeholder="Ulica i broj, grad"
+app/dashboard/groomer/profile.tsx:236:                placeholderTextColor={Colors.muted}
+app/dashboard/groomer/profile.tsx:246:                placeholder="+385 91 234 5678"
+app/dashboard/groomer/profile.tsx:247:                placeholderTextColor={Colors.muted}
+app/dashboard/groomer/profile.tsx:258:                placeholder="email@primjer.hr"

@@ -1,0 +1,5 @@
+app/walk/[id].tsx
+app/walk/active.tsx
+app/walk/index.tsx
+lib/walk-db.ts
+lib/walk-types.ts

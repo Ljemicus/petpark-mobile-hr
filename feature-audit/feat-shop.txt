@@ -1,0 +1,8 @@
+app/(tabs)/pet-shops.tsx
+app/(tabs)/shop.tsx
+app/shop/[slug].tsx
+app/shop/basket.tsx
+app/shop/index.tsx
+components/shop/ShopHomeScreen.tsx
+lib/shop-context.tsx
+lib/shop.ts

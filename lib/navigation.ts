@@ -1,4 +1,4 @@
-import type { User } from './mock-data';
+import type { User } from './domain-types';
 
 export type DashboardLink = {
   label: string;

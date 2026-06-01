@@ -23,6 +23,7 @@ import {
   calculateSitterPayout,
   createCheckoutSession,
 } from '../../lib/payments';
+import { PAYMENT_DISABLED_MESSAGE, PAYMENT_DISABLED_TITLE, PAYMENTS_ENABLED } from '../../lib/payments/config';
 import type { Booking } from '../../lib/booking-types';
 import { SERVICE_LABELS } from '../../lib/booking-types';
 
@@ -81,6 +82,11 @@ export default function CheckoutScreen() {
   }
 
   async function handlePay() {
+    if (!PAYMENTS_ENABLED) {
+      Alert.alert(PAYMENT_DISABLED_TITLE, PAYMENT_DISABLED_MESSAGE);
+      return;
+    }
+
     if (!booking || !session?.access_token) {
       Alert.alert('Greška', 'Niste prijavljeni');
       return;
@@ -120,6 +126,9 @@ export default function CheckoutScreen() {
   function getStatusMessage() {
     if (!booking) return null;
 
+    if (!PAYMENTS_ENABLED) {
+      return { type: 'warning', message: PAYMENT_DISABLED_MESSAGE };
+    }
     if (booking.payment_status === 'paid') {
       return { type: 'success', message: 'Rezervacija je već plaćena' };
     }
@@ -251,15 +260,15 @@ export default function CheckoutScreen() {
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>Što slijedi nakon plaćanja?</Text>
-          <Text style={styles.infoText}>1. Otvara se siguran Stripe checkout</Text>
-          <Text style={styles.infoText}>2. Nakon uspješnog plaćanja rezervacija je potvrđena</Text>
-          <Text style={styles.infoText}>3. Potvrdu možete vidjeti na svom dashboardu</Text>
+          <Text style={styles.infoTitle}>{PAYMENTS_ENABLED ? 'Što slijedi nakon plaćanja?' : 'Plaćanje uskoro'}</Text>
+          <Text style={styles.infoText}>{PAYMENTS_ENABLED ? '1. Otvara se siguran Stripe checkout' : 'Upit i dogovor s pružateljem usluge rade normalno.'}</Text>
+          <Text style={styles.infoText}>{PAYMENTS_ENABLED ? '2. Nakon uspješnog plaćanja rezervacija je potvrđena' : 'Online naplata ostaje isključena dok plaćanja ne odobrimo.'}</Text>
+          <Text style={styles.infoText}>{PAYMENTS_ENABLED ? '3. Potvrdu možete vidjeti na svom dashboardu' : 'Ne pokreću se live ni sandbox transakcije.'}</Text>
         </View>
 
         {/* Security Badge */}
         <View style={styles.securityBadge}>
-          <Text style={styles.securityText}>🔒 Sigurno plaćanje putem Stripe-a</Text>
+          <Text style={styles.securityText}>{PAYMENTS_ENABLED ? '🔒 Sigurno plaćanje putem Stripe-a' : '🔒 Plaćanje je trenutno isključeno'}</Text>
         </View>
 
         {/* Pay Button */}
@@ -267,6 +276,7 @@ export default function CheckoutScreen() {
           style={[
             styles.payButton,
             (paying ||
+              !PAYMENTS_ENABLED ||
               booking.payment_status === 'paid' ||
               booking.status !== 'accepted' ||
               providerReady === false) &&
@@ -275,6 +285,7 @@ export default function CheckoutScreen() {
           onPress={handlePay}
           disabled={
             paying ||
+            !PAYMENTS_ENABLED ||
             booking.payment_status === 'paid' ||
             booking.status !== 'accepted' ||
             providerReady === false
@@ -284,7 +295,9 @@ export default function CheckoutScreen() {
             <ActivityIndicator color={Colors.white} />
           ) : (
             <Text style={styles.payButtonText}>
-              {booking.payment_status === 'paid'
+              {!PAYMENTS_ENABLED
+                ? 'Plaćanje uskoro'
+                : booking.payment_status === 'paid'
                 ? 'Plaćeno'
                 : providerReady === false
                 ? 'Plaćanje trenutno nije dostupno'

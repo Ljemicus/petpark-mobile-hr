@@ -1,10 +1,5 @@
 import { supabase } from './supabase';
-import {
-  Sitter,
-  ForumTopic,
-  sitters as mockSitters,
-  forumTopics as mockForumTopics,
-} from './mock-data';
+import type { ChatContact, ForumCategory, ForumReply, ForumTopic, Sitter } from './domain-types';
 import type { Pet, PetPassport, PetWithPassport, Appointment, PetDocument } from './types';
 
 interface SitterFilters {
@@ -69,27 +64,7 @@ export async function getSitters(filters?: SitterFilters): Promise<Sitter[]> {
       verified: row.verified ?? false,
     }));
   } catch {
-    // Fallback na mock podatke
-    let result = mockSitters;
-    if (filters?.city && filters.city !== 'Svi') {
-      result = result.filter((s) => s.city === filters.city);
-    }
-    if (filters?.search) {
-      const q = filters.search.toLowerCase();
-      result = result.filter(
-        (s) =>
-          s.name.toLowerCase().includes(q) ||
-          s.services.some((svc) => svc.toLowerCase().includes(q))
-      );
-    }
-    if (filters?.service && filters.service !== 'Sve') {
-      const selected = filters.service.toLowerCase();
-      result = result.filter((s) => s.services.some((svc) => svc.toLowerCase().includes(selected)));
-    }
-    if (filters?.minRating && filters.minRating > 0) {
-      result = result.filter((s) => s.rating >= filters.minRating!);
-    }
-    return result;
+    return [];
   }
 }
 
@@ -130,8 +105,7 @@ export async function getSitterById(id: string): Promise<Sitter | null> {
       verified: data.verified ?? false,
     };
   } catch {
-    // Fallback na mock podatke
-    return mockSitters.find((s) => s.id === id) ?? null;
+    return null;
   }
 }
 
@@ -207,9 +181,133 @@ export async function setSitterVerification(
   }
 }
 
-// Forum ostaje mock (Supabase nema te tablice još)
-export async function getForumTopics(): Promise<ForumTopic[]> {
-  return mockForumTopics;
+function relativeTime(value?: string | null) {
+  if (!value) return 'Upravo sada';
+  const diffMs = Date.now() - new Date(value).getTime();
+  const minutes = Math.max(0, Math.round(diffMs / 60000));
+  if (minutes < 1) return 'Upravo sada';
+  if (minutes < 60) return `Prije ${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `Prije ${hours} h`;
+  const days = Math.round(hours / 24);
+  return `Prije ${days} d`;
+}
+
+export async function getForumCategories(): Promise<ForumCategory[]> {
+  try {
+    const { data, error } = await supabase
+      .from('forum_categories')
+      .select('id, name, emoji, description, sort_order, forum_topics(count)')
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      emoji: row.emoji ?? '💬',
+      description: row.description ?? '',
+      topicCount: row.forum_topics?.[0]?.count ?? 0,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getForumTopics(categoryId?: string): Promise<ForumTopic[]> {
+  try {
+    let query = supabase
+      .from('forum_topics')
+      .select('id, category_id, author_name, title, preview, reply_count, last_activity_at')
+      .order('last_activity_at', { ascending: false });
+
+    if (categoryId) query = query.eq('category_id', categoryId);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      categoryId: row.category_id ?? '',
+      title: row.title,
+      author: row.author_name ?? 'PetPark korisnik',
+      replyCount: row.reply_count ?? 0,
+      lastActivity: relativeTime(row.last_activity_at),
+      preview: row.preview ?? '',
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getForumTopicById(topicId: string): Promise<ForumTopic | null> {
+  const topics = await getForumTopics();
+  return topics.find((topic) => topic.id === topicId) ?? null;
+}
+
+export async function getForumReplies(topicId: string): Promise<ForumReply[]> {
+  try {
+    const { data, error } = await supabase
+      .from('forum_replies')
+      .select('id, author_name, body, is_expert, created_at')
+      .eq('topic_id', topicId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      author: row.author_name ?? 'PetPark korisnik',
+      text: row.body,
+      time: relativeTime(row.created_at),
+      isExpert: !!row.is_expert,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getChatContacts(search?: string): Promise<ChatContact[]> {
+  const normalized = search?.trim().toLowerCase() ?? '';
+
+  try {
+    const [sittersResult, usersResult] = await Promise.all([
+      supabase
+        .from('sitter_profiles')
+        .select('id, services, avatar, users!inner(full_name, city)')
+        .limit(20),
+      supabase
+        .from('users')
+        .select('id, full_name, name, city, role, avatar')
+        .limit(20),
+    ]);
+
+    if (sittersResult.error) throw sittersResult.error;
+    if (usersResult.error) throw usersResult.error;
+
+    const providers: ChatContact[] = (sittersResult.data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.users?.full_name ?? 'PetPark provider',
+      subtitle: `${row.users?.city ?? 'Hrvatska'} · ${(row.services ?? []).slice(0, 2).join(', ') || 'Usluge za ljubimce'}`,
+      avatar: row.avatar || undefined,
+      type: 'provider',
+    }));
+
+    const users: ChatContact[] = (usersResult.data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.full_name ?? row.name ?? 'PetPark korisnik',
+      subtitle: `${row.city ?? 'Hrvatska'} · ${row.role ?? 'korisnik'}`,
+      avatar: row.avatar && row.avatar.startsWith('http') ? row.avatar : undefined,
+      type: 'user',
+    }));
+
+    const merged = [...providers, ...users];
+    return normalized
+      ? merged.filter((contact) =>
+          contact.name.toLowerCase().includes(normalized) ||
+          contact.subtitle.toLowerCase().includes(normalized)
+        )
+      : merged;
+  } catch {
+    return [];
+  }
 }
 
 // ─── Pet Passport ───────────────────────────────────────────────────

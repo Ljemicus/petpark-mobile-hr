@@ -24,11 +24,15 @@ export default function CartScreen() {
     setPaying(true);
     try {
       const result = await createShopCheckout(items, session?.access_token);
-      if (result?.url) {
+      if ('disabled' in result && result.disabled) {
+        Alert.alert(result.title, result.message);
+        return;
+      }
+      if ('url' in result && result.url) {
         await Linking.openURL(result.url);
         return;
       }
-      router.push('/payments/checkout' as never);
+      Alert.alert('Plaćanje uskoro', 'Košarica je spremljena lokalno. Online plaćanje bit će dostupno uskoro.');
     } catch (error) {
       Alert.alert('Checkout nije dostupan', error instanceof Error ? error.message : 'Pokušaj ponovno kasnije.');
     } finally {
@@ -89,7 +93,7 @@ export default function CartScreen() {
             <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Dostava</Text><Text style={[styles.summaryValue, { color: Colors.success }]}>Besplatna</Text></View>
             <View style={styles.summaryRow}><Text style={styles.totalLabel}>Ukupno</Text><Text style={styles.totalValue}>{formatPrice(total)}</Text></View>
             <TouchableOpacity style={[styles.primaryButton, paying && { opacity: 0.6 }]} disabled={paying} onPress={() => void handleCheckout()}>
-              <Text style={styles.primaryButtonText}>{paying ? 'Otvaram checkout...' : 'Nastavi na plaćanje'}</Text>
+              <Text style={styles.primaryButtonText}>{paying ? 'Provjeravam...' : 'Plaćanje uskoro'}</Text>
             </TouchableOpacity>
           </View>
         </>

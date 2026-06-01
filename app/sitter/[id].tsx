@@ -3,7 +3,7 @@ import { View, Text, Image, ScrollView, StyleSheet, ActivityIndicator } from 're
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
-import { Sitter } from '../../lib/mock-data';
+import type { Sitter } from '../../lib/domain-types';
 import { getSitterById } from '../../lib/db';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';

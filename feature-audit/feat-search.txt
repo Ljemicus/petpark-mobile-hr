@@ -1,0 +1,2 @@
+app/(tabs)/search.tsx
+components/SearchBar.tsx

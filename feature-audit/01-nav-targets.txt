@@ -1,0 +1,142 @@
+app/payments/wallet.tsx:218:router.push('/dashboard/sitter/settings'
+app/payments/cancel.tsx:46:router.push(`/payments/checkout?bookingId=${booking_id}`
+app/payments/cancel.tsx:54:router.replace('/dashboard/owner'
+app/payments/success.tsx:53:router.replace('/dashboard/owner'
+app/payments/success.tsx:60:router.push('/payments/history'
+app/payments/history.tsx:137:router.push(`/payments/receipt/${payment.id}`
+app/walk/index.tsx:232:router.push(`/walk/${walkId}`
+app/walk/index.tsx:236:router.push(`/walk/active?walkId=${walkId}`
+app/walk/index.tsx:240:router.push('/walk/active'
+app/walk/active.tsx:611:router.push('/walk'
+app/walk/active.tsx:853:router.push('/walk'
+app/walk/[id].tsx:123:router.push('/walk'
+app/walk/[id].tsx:165:router.push('/walk'
+app/walk/[id].tsx:290:router.push(`/walk/active?walkId=${walk.id}`
+app/login.tsx:27:router.replace(needsOnboarding ? '/onboarding' : '/(tabs
+app/login.tsx:94:router.replace('/register'
+app/chat/index.tsx:146:router.push(`/chat/${conversation.partnerId}?name=${encodeURIComponent(conversation.partnerName
+app/chat/index.tsx:175:router.push('/chat/new-chat'
+app/chat/index.tsx:190:router.push('/chat/new-chat'
+app/chat/new-chat.tsx:60:router.replace(`/chat/${item.id}?name=${encodeURIComponent(item.name
+app/booking/[sitterId].tsx:654:router.push('/login'
+app/booking/[sitterId].tsx:690:router.replace({
+app/booking/[sitterId].tsx:714:router.push('/dashboard/owner/pets'
+app/booking/[sitterId].tsx:796:router.push(`/pet-passport/${petId}`
+app/booking/my-bookings.tsx:137:router.push({
+app/booking/my-bookings.tsx:209:router.push('/(tabs
+app/booking/confirmation.tsx:198:router.push('/dashboard/owner/bookings'
+app/booking/confirmation.tsx:205:router.push('/(tabs
+app/booking/confirmation.tsx:221:router.push('/(tabs
+app/booking/[id].tsx:91:router.push({
+app/booking/[id].tsx:100:router.push(`/payments/checkout?bookingId=${booking.id}`
+app/pet-passport/index.tsx:50:router.push(`/pet-passport/${petId}`
+app/(tabs)/index.tsx:84:router.replace('/onboarding'
+app/(tabs)/index.tsx:87:router.push(route as any
+app/(tabs)/requests.tsx:28:router.push('/login'
+app/(tabs)/requests.tsx:38:router.push('/dashboard/owner/requests' as any
+app/(tabs)/requests.tsx:44:router.push(providerRoute as any
+app/(tabs)/requests.tsx:50:router.push(primaryRoute as any
+app/(tabs)/search.tsx:22:router.push(route as any
+app/(tabs)/profile.tsx:30:router.push('/login'
+app/(tabs)/profile.tsx:31:router.push('/register'
+app/(tabs)/profile.tsx:117:router.push('/onboarding'
+app/(tabs)/profile.tsx:168:router.push(item.route as any
+app/(tabs)/profile.tsx:179:router.push(item.route as any
+app/(tabs)/profile.tsx:197:router.push('/chat' as any
+app/(tabs)/profile.tsx:202:router.push('/privacy' as any
+app/(tabs)/profile.tsx:206:router.push('/terms' as any
+app/shop/basket.tsx:53:router.replace('/shop' as never
+app/shop/[slug].tsx:65:router.push('/shop/basket' as never
+app/shop/[slug].tsx:149:router.replace(`/shop/${item.slug}` as never
+app/register.tsx:32:router.replace('/onboarding'
+app/register.tsx:128:router.replace('/login'
+app/dashboard/owner/index.tsx:279:router.push('/messages'
+app/dashboard/owner/index.tsx:327:router.push('/dashboard/owner/pets?action=add'
+app/dashboard/owner/index.tsx:333:router.push('/(tabs
+app/dashboard/owner/index.tsx:339:router.push('/dashboard/owner/bookings'
+app/dashboard/owner/index.tsx:345:router.push('/lost-pets'
+app/dashboard/owner/index.tsx:351:router.push('/pet-passport'
+app/dashboard/owner/index.tsx:357:router.push('/walk'
+app/dashboard/owner/index.tsx:367:router.push('/dashboard/owner/pets'
+app/dashboard/owner/index.tsx:383:router.push('/dashboard/owner/pets?action=add'
+app/dashboard/owner/index.tsx:394:router.push(`/pet-passport/${pet.id}`
+app/dashboard/owner/index.tsx:405:router.push('/dashboard/owner/bookings'
+app/dashboard/owner/index.tsx:421:router.push('/(tabs
+app/dashboard/owner/index.tsx:432:router.push(`/dashboard/owner/bookings?id=${booking.id}`
+app/dashboard/owner/index.tsx:443:router.push('/dashboard/owner/messages'
+app/dashboard/owner/requests.tsx:50:router.push('/login'
+app/dashboard/owner/bookings.tsx:329:router.push({
+app/dashboard/owner/bookings.tsx:336:router.push({
+app/dashboard/owner/bookings.tsx:415:router.push('/(tabs
+app/dashboard/groomer/index.tsx:242:router.push('/dashboard/groomer/profile'
+app/dashboard/groomer/index.tsx:267:router.push('/messages'
+app/dashboard/groomer/index.tsx:294:router.push('/dashboard/groomer/profile'
+app/dashboard/groomer/index.tsx:336:router.push('/dashboard/groomer/availability'
+app/dashboard/groomer/index.tsx:342:router.push('/dashboard/groomer/bookings'
+app/dashboard/groomer/index.tsx:348:router.push('/dashboard/groomer/portfolio'
+app/dashboard/groomer/index.tsx:354:router.push('/dashboard/groomer/earnings'
+app/dashboard/groomer/index.tsx:373:router.push(`/dashboard/groomer/bookings?id=${booking.id}`
+app/dashboard/groomer/index.tsx:384:router.push('/dashboard/groomer/bookings'
+app/dashboard/groomer/index.tsx:405:router.push(`/dashboard/groomer/bookings?id=${booking.id}`
+app/dashboard/groomer/index.tsx:416:router.push('/dashboard/groomer/earnings'
+app/dashboard/groomer/index.tsx:445:router.push('/dashboard/groomer/reviews'
+app/dashboard/groomer/index.tsx:492:router.push('/dashboard/groomer/profile'
+app/dashboard/groomer/index.tsx:498:router.push('/dashboard/groomer/profile'
+app/dashboard/groomer/index.tsx:521:router.push('/messages'
+app/dashboard/rescue/index.tsx:50:router.push(action.route as any
+app/dashboard/sitter/index.tsx:232:router.push('/dashboard/sitter/messages'
+app/dashboard/sitter/index.tsx:298:router.push('/dashboard/sitter/availability'
+app/dashboard/sitter/index.tsx:304:router.push('/dashboard/sitter/bookings'
+app/dashboard/sitter/index.tsx:310:router.push('/dashboard/sitter/earnings'
+app/dashboard/sitter/index.tsx:316:router.push('/dashboard/sitter/messages'
+app/dashboard/sitter/index.tsx:322:router.push('/walk'
+app/dashboard/sitter/index.tsx:341:router.push(`/dashboard/sitter/bookings?id=${booking.id}`
+app/dashboard/sitter/index.tsx:352:router.push('/dashboard/sitter/bookings'
+app/dashboard/sitter/index.tsx:373:router.push(`/dashboard/sitter/bookings?id=${booking.id}`
+app/dashboard/sitter/index.tsx:384:router.push('/dashboard/sitter/earnings'
+app/dashboard/sitter/index.tsx:456:router.push('/dashboard/sitter/messages'
+app/dashboard/sitter/requests.tsx:43:router.push('/login'
+app/dashboard/sitter/earnings.tsx:283:router.push('/payments/wallet'
+app/dashboard/breeder/index.tsx:351:router.push('/dashboard/breeder/messages'
+app/dashboard/breeder/index.tsx:418:router.push('/dashboard/breeder/litters?action=add'
+app/dashboard/breeder/index.tsx:424:router.push('/dashboard/breeder/litters'
+app/dashboard/breeder/index.tsx:430:router.push('/dashboard/breeder/applications'
+app/dashboard/breeder/index.tsx:436:router.push('/dashboard/breeder/documents'
+app/dashboard/breeder/index.tsx:499:router.push(`/dashboard/breeder/applications?id=${application.id}`
+app/dashboard/breeder/index.tsx:510:router.push('/dashboard/breeder/litters'
+app/dashboard/breeder/index.tsx:526:router.push('/dashboard/breeder/litters?action=add'
+app/dashboard/breeder/index.tsx:537:router.push(`/dashboard/breeder/litters?id=${litter.id}`
+app/dashboard/breeder/index.tsx:548:router.push('/dashboard/breeder/applications'
+app/dashboard/breeder/index.tsx:569:router.push(`/dashboard/breeder/applications?id=${application.id}`
+app/dashboard/breeder/index.tsx:629:router.push('/dashboard/breeder/messages'
+app/dashboard/breeder/litters.tsx:158:router.push(`/dashboard/breeder/puppies?litterId=${litter.id}`
+app/dashboard/breeder/litters.tsx:166:router.push(`/dashboard/breeder/litters?edit=${litter.id}`
+app/dashboard/breeder/litters.tsx:193:router.push('/dashboard/breeder/litters?action=add'
+app/dashboard/breeder/litters.tsx:215:router.push('/dashboard/breeder/litters?action=add'
+app/dashboard/breeder/messages.tsx:64:router.push(`/dashboard/breeder/chat?partnerId=${partnerId}`
+app/dashboard/trainer/index.tsx:243:router.push('/messages'
+app/dashboard/trainer/index.tsx:291:router.push('/dashboard/trainer/programs'
+app/dashboard/trainer/index.tsx:297:router.push('/dashboard/trainer/availability'
+app/dashboard/trainer/index.tsx:303:router.push('/dashboard/trainer/bookings'
+app/dashboard/trainer/index.tsx:309:router.push('/dashboard/trainer/earnings'
+app/dashboard/trainer/index.tsx:319:router.push('/dashboard/trainer/bookings'
+app/dashboard/trainer/index.tsx:341:router.push('/dashboard/trainer/bookings'
+app/dashboard/trainer/index.tsx:357:router.push('/dashboard/trainer/availability'
+app/dashboard/trainer/index.tsx:368:router.push(`/dashboard/trainer/bookings?id=${booking.id}`
+app/dashboard/trainer/index.tsx:379:router.push('/dashboard/trainer/programs'
+app/dashboard/trainer/index.tsx:395:router.push('/dashboard/trainer/programs'
+app/dashboard/trainer/index.tsx:406:router.push(`/dashboard/trainer/programs?edit=${program.id}`
+app/dashboard/trainer/index.tsx:417:router.push('/messages'
+app/notifications.tsx:52:router.push({ pathname: '/booking-requests/[id]', params: { id, role } } as any
+app/notifications.tsx:61:router.push('/login'
+app/onboarding.tsx:287:router.replace(form.role === 'vlasnik' ? '/(tabs
+app/onboarding.tsx:646:router.replace('/(tabs
+app/sitter/[id].tsx:29:router.push('/login'
+app/sitter/[id].tsx:32:router.push({
+app/booking-requests/[id].tsx:63:router.push('/login'
+components/SitterCard.tsx:20:router.push(`/sitter/${sitter.id}`
+components/OnboardingGate.tsx:18:router.replace('/onboarding'
+components/shop/ShopHomeScreen.tsx:16:router.push(`/shop/${product.slug}` as never
+components/shop/ShopHomeScreen.tsx:85:router.push('/shop/basket' as never
+components/booking-requests/BookingRequestMobile.tsx:76:router.push({ pathname: '/booking-requests/[id]', params: { id: request.id, role } } as any
+components/ForumTopicCard.tsx:18:router.push(`/topic/${topic.id}`

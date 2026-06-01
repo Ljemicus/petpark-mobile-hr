@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '../lib/colors';
 import Badge from './Badge';
-import { Sitter } from '../lib/mock-data';
+import type { Sitter } from '../lib/domain-types';
 
 interface SitterCardProps {
   sitter: Sitter;

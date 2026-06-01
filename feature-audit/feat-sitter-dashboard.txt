@@ -1,0 +1,4 @@
+app/booking/[sitterId].tsx
+components/SitterCard.tsx
+lib/sitter-dashboard-db.ts
+lib/sitter-dashboard-types.ts

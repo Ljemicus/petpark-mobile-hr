@@ -1,0 +1,66 @@
+app/walk/active.tsx:19:import * as Location from 'expo-location';
+app/walk/active.tsx:295:              {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
+app/walk/active.tsx:325:  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+app/walk/active.tsx:335:      const { status } = await Location.requestForegroundPermissionsAsync();
+app/walk/active.tsx:339:        const location = await Location.getCurrentPositionAsync({
+app/walk/active.tsx:340:          accuracy: Location.Accuracy.High,
+app/walk/active.tsx:434:      locationSubscriptionRef.current = await Location.watchPositionAsync(
+app/walk/active.tsx:436:          accuracy: Location.Accuracy.BestForNavigation,
+app/walk/active.tsx:454:  const handleLocationUpdate = (location: Location.LocationObject) => {
+app/walk/active.tsx:576:      lat: currentLocation.lat,
+app/walk/active.tsx:577:      lng: currentLocation.lng,
+app/onboarding.tsx:14:import * as ImagePicker from 'expo-image-picker';
+app/onboarding.tsx:100:    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+app.json / app.config plugins & permissions:
+--- app.json ---
+{
+  "expo": {
+    "name": "PetPark",
+    "slug": "petpark-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "hr.ljemicus.petpark",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "6"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "hr.ljemicus.petpark",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "petpark",
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "69966cad-5bd8-446e-a104-198c2c15de6d"
+      }
+    },
+    "owner": "ljemicus",
+    "sdkVersion": "55.0.0"
+  }
+}
