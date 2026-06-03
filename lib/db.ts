@@ -9,60 +9,87 @@ interface SitterFilters {
   minRating?: number;
 }
 
+type ProviderRow = {
+  id: string;
+  display_name: string;
+  city: string | null;
+  bio: string | null;
+  rating_avg: number | null;
+  review_count: number | null;
+  verified_status: string | null;
+  provider_kind: string | null;
+  service_listings?: Array<{ title: string | null; display_category: string | null; short_description: string | null; photos: unknown }> | null;
+  provider_services?: Array<{ service_code: string | null; base_price: number | null; is_active: boolean | null }> | null;
+  profiles?: { avatar_url: string | null } | null;
+};
+
+function arrayFromJson(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function firstPhoto(value: unknown): string {
+  const photos = arrayFromJson(value);
+  return photos[0] ?? '';
+}
+
+function mapProviderToSitter(row: ProviderRow): Sitter {
+  const activeServices = row.provider_services?.filter((service) => service.is_active !== false) ?? [];
+  const listing = row.service_listings?.[0];
+  const services = activeServices
+    .map((service) => service.service_code)
+    .filter((service): service is string => !!service);
+  const price = activeServices[0]?.base_price ?? 0;
+
+  return {
+    id: row.id,
+    name: row.display_name,
+    city: row.city ?? 'Hrvatska',
+    rating: row.rating_avg ?? 0,
+    reviewCount: row.review_count ?? 0,
+    pricePerHour: price,
+    bio: row.bio ?? listing?.short_description ?? '',
+    services: services.length > 0 ? services : [listing?.display_category ?? listing?.title ?? 'Čuvanje ljubimaca'],
+    avatar: row.profiles?.avatar_url ?? firstPhoto(listing?.photos),
+    verified: row.verified_status === 'verified',
+  };
+}
+
 export async function getSitters(filters?: SitterFilters): Promise<Sitter[]> {
   try {
-    let query = supabase
-      .from('sitter_profiles')
+    const { data, error } = await supabase
+      .from('providers')
       .select(`
         id,
+        display_name,
+        city,
         bio,
-        services,
-        price_per_hour,
-        rating,
+        rating_avg,
         review_count,
-        verified,
-        avatar,
-        users!inner (
-          full_name,
-          city
-        )
-      `);
-
-    if (filters?.city && filters.city !== 'Svi') {
-      query = query.eq('users.city', filters.city);
-    }
-
-    if (filters?.search) {
-      query = query.or(
-        `bio.ilike.%${filters.search}%,users.full_name.ilike.%${filters.search}%`
-      );
-    }
-
-    if (filters?.service && filters.service !== 'Sve') {
-      query = query.contains('services', [filters.service]);
-    }
-
-    if (filters?.minRating && filters.minRating > 0) {
-      query = query.gte('rating', filters.minRating);
-    }
-
-    const { data, error } = await query;
+        verified_status,
+        provider_kind,
+        profiles(avatar_url),
+        provider_services(service_code, base_price, is_active),
+        service_listings(title, display_category, short_description, photos)
+      `)
+      .eq('provider_kind', 'sitter')
+      .eq('public_status', 'published')
+      .limit(50);
 
     if (error) throw error;
-    if (!data || data.length === 0) throw new Error('Nema podataka');
 
-    return data.map((row: any) => ({
-      id: row.id,
-      name: row.users.full_name,
-      city: row.users.city,
-      rating: row.rating ?? 0,
-      reviewCount: row.review_count ?? 0,
-      pricePerHour: row.price_per_hour ?? 0,
-      bio: row.bio ?? '',
-      services: row.services ?? [],
-      avatar: row.avatar ?? '',
-      verified: row.verified ?? false,
-    }));
+    const normalizedSearch = filters?.search?.trim().toLowerCase();
+    return ((data ?? []) as unknown as ProviderRow[])
+      .map(mapProviderToSitter)
+      .filter((sitter) => {
+        if (filters?.city && filters.city !== 'Svi' && sitter.city !== filters.city) return false;
+        if (filters?.service && filters.service !== 'Sve' && !sitter.services.includes(filters.service)) return false;
+        if (filters?.minRating && filters.minRating > 0 && sitter.rating < filters.minRating) return false;
+        if (normalizedSearch) {
+          const haystack = `${sitter.name} ${sitter.city} ${sitter.bio} ${sitter.services.join(' ')}`.toLowerCase();
+          if (!haystack.includes(normalizedSearch)) return false;
+        }
+        return true;
+      });
   } catch {
     return [];
   }
@@ -71,39 +98,26 @@ export async function getSitters(filters?: SitterFilters): Promise<Sitter[]> {
 export async function getSitterById(id: string): Promise<Sitter | null> {
   try {
     const { data, error } = await supabase
-      .from('sitter_profiles')
+      .from('providers')
       .select(`
         id,
+        display_name,
+        city,
         bio,
-        services,
-        price_per_hour,
-        rating,
+        rating_avg,
         review_count,
-        verified,
-        avatar,
-        users!inner (
-          full_name,
-          city
-        )
+        verified_status,
+        provider_kind,
+        profiles(avatar_url),
+        provider_services(service_code, base_price, is_active),
+        service_listings(title, display_category, short_description, photos)
       `)
       .eq('id', id)
-      .single();
+      .eq('provider_kind', 'sitter')
+      .maybeSingle();
 
     if (error) throw error;
-    if (!data) throw new Error('Nije pronađen');
-
-    return {
-      id: data.id,
-      name: (data as any).users.full_name,
-      city: (data as any).users.city,
-      rating: data.rating ?? 0,
-      reviewCount: data.review_count ?? 0,
-      pricePerHour: data.price_per_hour ?? 0,
-      bio: data.bio ?? '',
-      services: data.services ?? [],
-      avatar: data.avatar ?? '',
-      verified: data.verified ?? false,
-    };
+    return data ? mapProviderToSitter(data as unknown as ProviderRow) : null;
   } catch {
     return null;
   }
@@ -125,32 +139,20 @@ export interface PendingSitter {
 export async function getPendingSitters(): Promise<PendingSitter[]> {
   try {
     const { data, error } = await supabase
-      .from('sitter_profiles')
-      .select(`
-        id,
-        avatar,
-        verification_status,
-        verification_notes,
-        verification_documents,
-        created_at,
-        users!inner (
-          full_name,
-          city
-        )
-      `)
-      .eq('verification_status', 'pending');
+      .from('providers')
+      .select('id, display_name, city, verified_status, created_at, profiles(avatar_url)')
+      .eq('provider_kind', 'sitter')
+      .eq('verified_status', 'pending');
 
     if (error) throw error;
-    if (!data || data.length === 0) return [];
-
-    return data.map((row: any) => ({
+    return ((data ?? []) as unknown as Array<ProviderRow & { created_at?: string }>).map((row) => ({
       id: row.id,
-      name: row.users.full_name,
-      city: row.users.city,
-      avatar: row.avatar ?? '',
-      verificationStatus: row.verification_status ?? 'pending',
-      verificationNotes: row.verification_notes ?? '',
-      verificationDocuments: row.verification_documents ?? [],
+      name: row.display_name,
+      city: row.city ?? 'Hrvatska',
+      avatar: row.profiles?.avatar_url ?? '',
+      verificationStatus: row.verified_status ?? 'pending',
+      verificationNotes: '',
+      verificationDocuments: [],
       submittedAt: row.created_at ?? null,
     }));
   } catch {
@@ -163,16 +165,13 @@ export async function setSitterVerification(
   approved: boolean,
   adminNotes?: string,
 ): Promise<boolean> {
+  void adminNotes;
   try {
-    const status = approved ? 'verified' : 'rejected';
     const { error } = await supabase
-      .from('sitter_profiles')
-      .update({
-        verification_status: status,
-        verified: approved,
-        ...(adminNotes ? { admin_notes: adminNotes } : {}),
-      })
-      .eq('id', sitterId);
+      .from('providers')
+      .update({ verified_status: approved ? 'verified' : 'rejected' })
+      .eq('id', sitterId)
+      .eq('provider_kind', 'sitter');
 
     if (error) throw error;
     return true;
@@ -193,108 +192,55 @@ function relativeTime(value?: string | null) {
   return `Prije ${days} d`;
 }
 
+// Forum tables are not present on the remote schema yet. Keep navigation intact and render Uskoro/empty states.
 export async function getForumCategories(): Promise<ForumCategory[]> {
-  try {
-    const { data, error } = await supabase
-      .from('forum_categories')
-      .select('id, name, emoji, description, sort_order, forum_topics(count)')
-      .order('sort_order', { ascending: true });
-
-    if (error) throw error;
-    return (data ?? []).map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      emoji: row.emoji ?? '💬',
-      description: row.description ?? '',
-      topicCount: row.forum_topics?.[0]?.count ?? 0,
-    }));
-  } catch {
-    return [];
-  }
+  return [];
 }
 
-export async function getForumTopics(categoryId?: string): Promise<ForumTopic[]> {
-  try {
-    let query = supabase
-      .from('forum_topics')
-      .select('id, category_id, author_name, title, preview, reply_count, last_activity_at')
-      .order('last_activity_at', { ascending: false });
-
-    if (categoryId) query = query.eq('category_id', categoryId);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return (data ?? []).map((row: any) => ({
-      id: row.id,
-      categoryId: row.category_id ?? '',
-      title: row.title,
-      author: row.author_name ?? 'PetPark korisnik',
-      replyCount: row.reply_count ?? 0,
-      lastActivity: relativeTime(row.last_activity_at),
-      preview: row.preview ?? '',
-    }));
-  } catch {
-    return [];
-  }
+export async function getForumTopics(_categoryId?: string): Promise<ForumTopic[]> {
+  return [];
 }
 
-export async function getForumTopicById(topicId: string): Promise<ForumTopic | null> {
-  const topics = await getForumTopics();
-  return topics.find((topic) => topic.id === topicId) ?? null;
+export async function getForumTopicById(_topicId: string): Promise<ForumTopic | null> {
+  return null;
 }
 
-export async function getForumReplies(topicId: string): Promise<ForumReply[]> {
-  try {
-    const { data, error } = await supabase
-      .from('forum_replies')
-      .select('id, author_name, body, is_expert, created_at')
-      .eq('topic_id', topicId)
-      .order('created_at', { ascending: true });
-
-    if (error) throw error;
-    return (data ?? []).map((row: any) => ({
-      id: row.id,
-      author: row.author_name ?? 'PetPark korisnik',
-      text: row.body,
-      time: relativeTime(row.created_at),
-      isExpert: !!row.is_expert,
-    }));
-  } catch {
-    return [];
-  }
+export async function getForumReplies(_topicId: string): Promise<ForumReply[]> {
+  return [];
 }
 
 export async function getChatContacts(search?: string): Promise<ChatContact[]> {
   const normalized = search?.trim().toLowerCase() ?? '';
 
   try {
-    const [sittersResult, usersResult] = await Promise.all([
+    const [providersResult, profilesResult] = await Promise.all([
       supabase
-        .from('sitter_profiles')
-        .select('id, services, avatar, users!inner(full_name, city)')
+        .from('providers')
+        .select('id, display_name, city, provider_kind, profiles(avatar_url), provider_services(service_code, is_active)')
+        .eq('public_status', 'published')
         .limit(20),
       supabase
-        .from('users')
-        .select('id, full_name, name, city, role, avatar')
+        .from('profiles')
+        .select('id, display_name, city, avatar_url')
         .limit(20),
     ]);
 
-    if (sittersResult.error) throw sittersResult.error;
-    if (usersResult.error) throw usersResult.error;
+    if (providersResult.error) throw providersResult.error;
+    if (profilesResult.error) throw profilesResult.error;
 
-    const providers: ChatContact[] = (sittersResult.data ?? []).map((row: any) => ({
+    const providers: ChatContact[] = ((providersResult.data ?? []) as unknown as ProviderRow[]).map((row) => ({
       id: row.id,
-      name: row.users?.full_name ?? 'PetPark provider',
-      subtitle: `${row.users?.city ?? 'Hrvatska'} · ${(row.services ?? []).slice(0, 2).join(', ') || 'Usluge za ljubimce'}`,
-      avatar: row.avatar || undefined,
+      name: row.display_name,
+      subtitle: `${row.city ?? 'Hrvatska'} · ${row.provider_kind ?? 'provider'}`,
+      avatar: row.profiles?.avatar_url || undefined,
       type: 'provider',
     }));
 
-    const users: ChatContact[] = (usersResult.data ?? []).map((row: any) => ({
+    const users: ChatContact[] = (profilesResult.data ?? []).map((row) => ({
       id: row.id,
-      name: row.full_name ?? row.name ?? 'PetPark korisnik',
-      subtitle: `${row.city ?? 'Hrvatska'} · ${row.role ?? 'korisnik'}`,
-      avatar: row.avatar && row.avatar.startsWith('http') ? row.avatar : undefined,
+      name: row.display_name ?? 'PetPark korisnik',
+      subtitle: `${row.city ?? 'Hrvatska'} · korisnik`,
+      avatar: row.avatar_url ?? undefined,
       type: 'user',
     }));
 
@@ -317,11 +263,11 @@ export async function getOwnerPets(ownerId: string): Promise<Pet[]> {
     const { data, error } = await supabase
       .from('pets')
       .select('*')
-      .eq('owner_id', ownerId)
+      .eq('owner_profile_id', ownerId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as unknown as Pet[];
   } catch {
     return [];
   }
@@ -336,7 +282,7 @@ export async function getPetById(petId: string): Promise<Pet | null> {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as unknown as Pet;
   } catch {
     return null;
   }
@@ -348,18 +294,24 @@ export async function getPetPassport(petId: string): Promise<PetPassport | null>
       .from('pet_passports')
       .select('*')
       .eq('pet_id', petId)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error) throw error;
     if (data) {
+      const raw = typeof data.raw_json === 'object' && data.raw_json && !Array.isArray(data.raw_json) ? data.raw_json as Record<string, unknown> : {};
       return {
         pet_id: data.pet_id,
-        vaccinations: data.vaccinations || [],
-        allergies: data.allergies || [],
-        medications: data.medications || [],
-        vet_info: data.vet_info || { name: '', phone: '', address: '', emergency: false },
+        vaccinations: Array.isArray(raw.vaccinations) ? raw.vaccinations : [],
+        allergies: Array.isArray(raw.allergies) ? raw.allergies : [],
+        medications: Array.isArray(raw.medications) ? raw.medications : [],
+        vet_info: {
+          name: data.vet_name ?? '',
+          phone: data.vet_phone ?? '',
+          address: data.vet_address ?? '',
+          emergency: false,
+        },
         notes: data.notes || '',
-      };
+      } as PetPassport;
     }
     return null;
   } catch {
@@ -401,7 +353,15 @@ export async function savePetPassport(
       .from('pet_passports')
       .upsert({
         pet_id: petId,
-        ...passport,
+        vet_name: passport.vet_info?.name ?? null,
+        vet_phone: passport.vet_info?.phone ?? null,
+        vet_address: passport.vet_info?.address ?? null,
+        notes: passport.notes ?? null,
+        raw_json: {
+          vaccinations: passport.vaccinations ?? [],
+          allergies: passport.allergies ?? [],
+          medications: passport.medications ?? [],
+        },
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'pet_id',
@@ -414,55 +374,15 @@ export async function savePetPassport(
   }
 }
 
-export async function getPetAppointments(petId: string): Promise<Appointment[]> {
-  try {
-    const { data, error } = await supabase
-      .from('pet_appointments')
-      .select('*')
-      .eq('pet_id', petId)
-      .order('date', { ascending: true })
-      .limit(10);
-
-    if (error) throw error;
-    return data || [];
-  } catch {
-    return [];
-  }
+// Pet appointment/document tables are part of the additive draft plan; keep screens safely empty until approved.
+export async function getPetAppointments(_petId: string): Promise<Appointment[]> {
+  return [];
 }
 
-export async function getUpcomingAppointments(ownerId: string): Promise<Appointment[]> {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await supabase
-      .from('pet_appointments')
-      .select(`
-        *,
-        pets!inner(owner_id)
-      `)
-      .eq('pets.owner_id', ownerId)
-      .gte('date', today)
-      .eq('status', 'upcoming')
-      .order('date', { ascending: true })
-      .limit(20);
-
-    if (error) throw error;
-    return data || [];
-  } catch {
-    return [];
-  }
+export async function getUpcomingAppointments(_ownerId: string): Promise<Appointment[]> {
+  return [];
 }
 
-export async function getPetDocuments(petId: string): Promise<PetDocument[]> {
-  try {
-    const { data, error } = await supabase
-      .from('pet_documents')
-      .select('*')
-      .eq('pet_id', petId)
-      .order('uploaded_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  } catch {
-    return [];
-  }
+export async function getPetDocuments(_petId: string): Promise<PetDocument[]> {
+  return [];
 }

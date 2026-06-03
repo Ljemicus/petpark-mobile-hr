@@ -59,8 +59,8 @@ export default function ForumScreen() {
         <Text style={styles.sectionTitle}>Kategorije</Text>
         {categories.length === 0 ? (
           <View style={styles.noticeCard}>
-            <Text style={styles.noticeTitle}>Još nema kategorija</Text>
-            <Text style={styles.noticeText}>Forum će se prikazati čim se sinkroniziraju podaci.</Text>
+            <Text style={styles.noticeTitle}>Forum uskoro</Text>
+            <Text style={styles.noticeText}>PetPark zajednica je spremna u aplikaciji, ali forum tablice čekaju odobrenu remote migraciju.</Text>
           </View>
         ) : (
           <View style={styles.categoriesGrid}>
@@ -81,8 +81,8 @@ export default function ForumScreen() {
         <Text style={styles.sectionTitle}>Popularne teme</Text>
         {topics.length === 0 ? (
           <View style={styles.noticeCard}>
-            <Text style={styles.noticeTitle}>Još nema tema</Text>
-            <Text style={styles.noticeText}>Budi prvi koji će otvoriti temu za PetPark zajednicu.</Text>
+            <Text style={styles.noticeTitle}>Teme uskoro</Text>
+            <Text style={styles.noticeText}>Ne prikazujemo mock podatke; teme se uključuju čim se odobri forum schema.</Text>
           </View>
         ) : (
           topics.map((topic) => <ForumTopicCard key={topic.id} topic={topic} />)

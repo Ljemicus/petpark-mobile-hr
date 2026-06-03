@@ -55,6 +55,8 @@ app/pet-passport/[id].tsx:789:                placeholder="YYYY-MM-DD"
 app/pet-passport/[id].tsx:790:                placeholderTextColor={Colors.muted}
 app/pet-passport/[id].tsx:798:                placeholder="YYYY-MM-DD"
 app/pet-passport/[id].tsx:799:                placeholderTextColor={Colors.muted}
+app/(tabs)/forum.tsx:62:            <Text style={styles.noticeTitle}>Forum uskoro</Text>
+app/(tabs)/forum.tsx:84:            <Text style={styles.noticeTitle}>Teme uskoro</Text>
 app/(tabs)/profile.tsx:45:          <Text style={styles.dividerText}>uskoro</Text>
 app/(tabs)/profile.tsx:50:          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem Apple računa dolazi uskoro.')}>
 app/(tabs)/profile.tsx:54:          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Uskoro', 'Prijava putem Google računa dolazi uskoro.')}>
@@ -119,5 +121,3 @@ app/dashboard/groomer/profile.tsx:205:                placeholderTextColor={Colo
 app/dashboard/groomer/profile.tsx:235:                placeholder="Ulica i broj, grad"
 app/dashboard/groomer/profile.tsx:236:                placeholderTextColor={Colors.muted}
 app/dashboard/groomer/profile.tsx:246:                placeholder="+385 91 234 5678"
-app/dashboard/groomer/profile.tsx:247:                placeholderTextColor={Colors.muted}
-app/dashboard/groomer/profile.tsx:258:                placeholder="email@primjer.hr"

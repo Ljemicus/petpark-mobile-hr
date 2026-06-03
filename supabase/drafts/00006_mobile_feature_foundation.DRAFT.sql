@@ -1,3 +1,6 @@
+-- DRAFT — do not apply to remote; superseded by existing remote schema. Kept for reference only.
+-- Created before remote 32-table schema was discovered. Any future schema work must be additive and approval-gated.
+
 -- ============================================================
 -- PetPark Mobile feature foundation
 -- Local/dev schema for mobile feature completion: bookings, chat,
