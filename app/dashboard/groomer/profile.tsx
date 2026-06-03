@@ -127,6 +127,10 @@ export default function GroomerProfileScreen() {
       Alert.alert('Greška', 'Odaberite grad');
       return;
     }
+    if (!userId) {
+      Alert.alert('Greška', 'Niste prijavljeni');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -134,19 +138,32 @@ export default function GroomerProfileScreen() {
         // Create new profile
         const { supabase } = await import('../../../lib/supabase');
         const { data, error } = await supabase
-          .from('groomers')
+          .from('providers')
           .insert({
-            user_id: userId,
-            ...form,
+            profile_id: userId!,
+            provider_kind: 'groomer',
+            display_name: form.name,
+            city: form.city,
+            bio: form.bio || null,
+            phone: form.phone || null,
+            email: form.email || null,
+            address: form.address || null,
+            public_status: 'draft',
           })
-          .select()
+          .select('id')
           .single();
         
         if (error) throw error;
+        if (data) {
+          await supabase.from('provider_groomer_settings').upsert({
+            provider_id: data.id,
+            specialization: form.specialization,
+          });
+        }
         
         Alert.alert('Uspjeh', 'Profil je kreiran!');
         setIsNewProfile(false);
-        setProfile(data);
+        await fetchData();
       } else if (profile) {
         // Update existing profile
         const success = await updateGroomerProfile(profile.id, form);

@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useAuth } from '../../lib/auth-context';
 import { supabase } from '../../lib/supabase';
+import { getBookingById } from '../../lib/booking-db';
 import { Colors } from '../../lib/colors';
 import {
   formatCurrency,
@@ -49,30 +50,20 @@ export default function CheckoutScreen() {
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          sitter:users!sitter_id(id, name, avatar_url),
-          pet:pets(id, name, species)
-        `)
-        .eq('id', bookingId)
-        .single();
+      const bookingData = await getBookingById(bookingId);
+      if (!bookingData) throw new Error('Rezervacija nije pronađena');
 
-      if (fetchError) throw fetchError;
-      if (!data) throw new Error('Rezervacija nije pronađena');
+      setBooking(bookingData);
 
-      setBooking(data as Booking);
-
-      // Check provider Stripe status
-      const { data: sitterProfile } = await supabase
-        .from('sitter_profiles')
+      // Check provider Stripe status (payments remain disabled by config/MVP stubs)
+      const { data: provider } = await supabase
+        .from('providers')
         .select('stripe_account_id, stripe_onboarding_complete')
-        .eq('user_id', data.sitter_id)
-        .single();
+        .eq('id', bookingData.sitter_id)
+        .maybeSingle();
 
       setProviderReady(
-        !!(sitterProfile?.stripe_account_id && sitterProfile?.stripe_onboarding_complete)
+        !!(provider?.stripe_account_id && provider?.stripe_onboarding_complete)
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Greška pri učitavanju');

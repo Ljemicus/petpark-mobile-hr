@@ -74,7 +74,7 @@ export default function GroomerAvailabilityScreen() {
           onPress: async () => {
             setGenerating(true);
             try {
-              const count = await generateDefaultSlots(profile.id);
+              const count = await generateDefaultSlots(profile.id, [1, 2, 3, 4, 5], '09:00', '17:00');
               Alert.alert('Uspjeh', `Dodano ${count} termina`);
               await fetchData();
             } catch (err) {

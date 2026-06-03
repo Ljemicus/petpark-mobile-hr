@@ -1,32 +1,17 @@
-  17 messages
-  13 bookings
-   8 walks
-   8 pets
-   7 sitter_profiles
-   7 availability
-   6 litters
-   5 users
+  16 providers
+  14 conversation_participants
+  11 bookings
+   7 walks
+   7 pets
+   7 messages
+   6 profiles
+   6 availability_slots
    5 trainer_availability
    5 reviews
-   5 providers
-   5 payment_methods
    4 training_programs
    4 trainer_bookings
-   4 puppies
-   4 groomer_availability
-   3 payouts
-   3 payments
-   3 groomers
-   3 groomer_portfolio
-   3 groomer_bookings
-   3 cart_items
-   3 applications
+   4 conversations
    2 trainers
-   2 publisher_profiles
-   2 products
-   2 pet_updates
    2 pet_passports
-   1 profiles
-   1 product_reviews
-   1 breeder_reviews
-   1 breeder_documents
+   1 provider_services
+   1 provider_groomer_settings

@@ -146,31 +146,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         await supabase
-          .from('users')
+          .from('profiles')
           .upsert({
             id: userId,
-            full_name: data.fullName,
+            email: session.user.email ?? '',
+            display_name: data.fullName,
             city: data.city,
-            role: data.role,
-            avatar: avatar,
-            onboarding_completed: true,
+            avatar_url: onboarding.avatarUrl ?? null,
+            onboarding_state: 'completed',
           }, { onConflict: 'id' });
 
         if (data.role === 'sitter') {
           await supabase
-            .from('sitter_profiles')
+            .from('providers')
             .upsert({
-              id: userId,
+              profile_id: userId,
+              provider_kind: 'sitter',
+              display_name: data.fullName,
+              city: data.city,
               bio: onboarding.experience ?? '',
-              services: onboarding.services ?? [],
-              price_per_hour: onboarding.pricePerHour ?? 0,
-              avatar: avatar,
-              verified: false,
-              has_yard: onboarding.hasYard ?? false,
-              verification_status: onboarding.verificationStatus ?? 'none',
-              verification_notes: onboarding.verificationNotes ?? null,
-              verification_documents: onboarding.verificationDocuments ?? [],
-            }, { onConflict: 'id' });
+              public_status: 'draft',
+              verified_status: onboarding.verificationStatus ?? 'none',
+            }, { onConflict: 'profile_id,provider_kind' });
         }
 
         setNeedsOnboarding(false);

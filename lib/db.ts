@@ -361,7 +361,7 @@ export async function savePetPassport(
           vaccinations: passport.vaccinations ?? [],
           allergies: passport.allergies ?? [],
           medications: passport.medications ?? [],
-        },
+        } as any,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'pet_id',

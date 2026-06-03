@@ -11,18 +11,147 @@ import type {
   ConversationSummary,
 } from './sitter-dashboard-types';
 
+type RemoteMessage = {
+  id: string;
+  conversation_id: string;
+  sender_profile_id: string;
+  content: string | null;
+  image_storage_path: string | null;
+  message_type: string;
+  created_at: string;
+  deleted_at: string | null;
+};
+
+type ConversationParticipant = {
+  conversation_id: string;
+  profile_id: string;
+  last_read_at: string | null;
+  created_at: string;
+};
+
+function toMessage(row: RemoteMessage, partnerId: string, bookingId: string | null = null): Message {
+  return {
+    id: row.id,
+    sender_id: row.sender_profile_id,
+    receiver_id: row.sender_profile_id === partnerId ? '' : partnerId,
+    booking_id: bookingId,
+    content: row.content,
+    image_url: row.image_storage_path,
+    read: true,
+    created_at: row.created_at,
+  };
+}
+
+async function findConversationBetween(userId: string, partnerId: string): Promise<string | null> {
+  const { data: mine } = await supabase
+    .from('conversation_participants')
+    .select('conversation_id')
+    .eq('profile_id', userId);
+
+  const conversationIds = (mine || []).map((row) => row.conversation_id);
+  if (conversationIds.length === 0) return null;
+
+  const { data: theirs } = await supabase
+    .from('conversation_participants')
+    .select('conversation_id')
+    .eq('profile_id', partnerId)
+    .in('conversation_id', conversationIds)
+    .limit(1);
+
+  return theirs?.[0]?.conversation_id || null;
+}
+
+async function getOrCreateConversation(userId: string, partnerId: string, bookingId?: string | null) {
+  const existingId = await findConversationBetween(userId, partnerId);
+  if (existingId) return existingId;
+
+  const { data: conversation, error } = await supabase
+    .from('conversations')
+    .insert({ created_by_profile_id: userId, booking_id: bookingId ?? null })
+    .select('id')
+    .single();
+
+  if (error || !conversation) throw error;
+
+  await supabase.from('conversation_participants').insert([
+    { conversation_id: conversation.id, profile_id: userId },
+    { conversation_id: conversation.id, profile_id: partnerId },
+  ]);
+
+  return conversation.id;
+}
+
+function toBooking(row: any): Booking {
+  return {
+    id: row.id,
+    owner_id: row.owner_profile_id,
+    sitter_id: row.provider_id,
+    pet_id: row.pet_id,
+    service_type: row.primary_service_code || 'boarding',
+    start_date: row.starts_at,
+    end_date: row.ends_at,
+    status: row.status,
+    total_price: row.total_amount ?? 0,
+    note: row.provider_note,
+    address: null,
+    message: row.owner_note,
+    created_at: row.created_at,
+    owner: row.owner
+      ? {
+          id: row.owner.id,
+          name: row.owner.display_name || row.owner.email || 'Korisnik',
+          avatar_url: row.owner.avatar_url,
+          email: row.owner.email,
+        }
+      : undefined,
+    pet: row.pet
+      ? {
+          id: row.pet.id,
+          name: row.pet.name,
+          species: row.pet.species,
+          breed: row.pet.breed,
+          special_needs: row.pet.special_needs,
+        }
+      : undefined,
+  } as Booking;
+}
+
 // ─── Sitter Profile ───────────────────────────────────────────────
 
 export async function getSitterProfile(userId: string): Promise<SitterProfile | null> {
   try {
     const { data, error } = await supabase
-      .from('sitter_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+      .from('providers')
+      .select('*, provider_sitter_settings(*)')
+      .eq('profile_id', userId)
+      .eq('provider_kind', 'sitter')
+      .maybeSingle();
 
-    if (error) throw error;
-    return data as SitterProfile;
+    if (error || !data) return null;
+    const settings = Array.isArray((data as any).provider_sitter_settings)
+      ? (data as any).provider_sitter_settings[0]
+      : (data as any).provider_sitter_settings;
+
+    return {
+      user_id: data.profile_id,
+      bio: data.bio,
+      experience_years: data.experience_years ?? 0,
+      services: ['boarding', 'walking', 'house-sitting', 'drop-in', 'daycare'],
+      prices: {
+        boarding: 0,
+        walking: 0,
+        'house-sitting': 0,
+        'drop-in': 0,
+        daycare: 0,
+      },
+      verified: data.verified_status === 'verified',
+      rating_avg: data.rating_avg,
+      review_count: data.review_count,
+      city: data.city,
+      instant_booking: data.instant_booking_enabled,
+      created_at: data.created_at,
+      ...settings,
+    } as SitterProfile;
   } catch (err) {
     console.error('getSitterProfile error:', err);
     return null;
@@ -34,15 +163,21 @@ export async function updateSitterProfile(
   updates: Partial<SitterProfile>
 ): Promise<SitterProfile | null> {
   try {
-    const { data, error } = await supabase
-      .from('sitter_profiles')
-      .update(updates)
-      .eq('user_id', userId)
-      .select()
-      .single();
+    const providerUpdates = {
+      bio: updates.bio ?? undefined,
+      city: updates.city ?? undefined,
+      experience_years: updates.experience_years ?? undefined,
+      instant_booking_enabled: updates.instant_booking ?? undefined,
+    };
+
+    const { error } = await supabase
+      .from('providers')
+      .update(providerUpdates)
+      .eq('profile_id', userId)
+      .eq('provider_kind', 'sitter');
 
     if (error) throw error;
-    return data as SitterProfile;
+    return getSitterProfile(userId);
   } catch (err) {
     console.error('updateSitterProfile error:', err);
     return null;
@@ -56,47 +191,16 @@ export async function getSitterBookings(sitterId: string): Promise<Booking[]> {
     const { data, error } = await supabase
       .from('bookings')
       .select(`
-        id,
-        owner_id,
-        sitter_id,
-        pet_id,
-        service_type,
-        start_date,
-        end_date,
-        status,
-        total_price,
-        note,
-        address,
-        message,
-        created_at,
-        owner:users!owner_id(id, name, avatar_url, email),
-        pet:pets(id, name, species, breed, special_needs)
+        id, owner_profile_id, provider_id, pet_id, primary_service_code,
+        starts_at, ends_at, status, total_amount, provider_note, owner_note, created_at,
+        owner:profiles!bookings_owner_profile_id_fkey(id, display_name, avatar_url, email),
+        pet:pets!bookings_pet_id_fkey(id, name, species, breed, special_needs)
       `)
-      .eq('sitter_id', sitterId)
+      .eq('provider_id', sitterId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-
-    return (data || []).map((row: any) => ({
-      ...row,
-      owner: row.owner
-        ? {
-            id: row.owner.id,
-            name: row.owner.name,
-            avatar_url: row.owner.avatar_url,
-            email: row.owner.email,
-          }
-        : undefined,
-      pet: row.pet
-        ? {
-            id: row.pet.id,
-            name: row.pet.name,
-            species: row.pet.species,
-            breed: row.pet.breed,
-            special_needs: row.pet.special_needs,
-          }
-        : undefined,
-    }));
+    return (data || []).map(toBooking);
   } catch (err) {
     console.error('getSitterBookings error:', err);
     return [];
@@ -108,11 +212,7 @@ export async function updateBookingStatus(
   status: 'accepted' | 'rejected' | 'completed'
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('bookings')
-      .update({ status })
-      .eq('id', bookingId);
-
+    const { error } = await supabase.from('bookings').update({ status }).eq('id', bookingId);
     if (error) throw error;
     return true;
   } catch (err) {
@@ -126,12 +226,19 @@ export async function updateBookingStatus(
 export async function getAvailability(sitterId: string): Promise<Availability[]> {
   try {
     const { data, error } = await supabase
-      .from('availability')
-      .select('*')
-      .eq('sitter_id', sitterId);
+      .from('availability_slots')
+      .select('id, provider_id, starts_at, status, created_at')
+      .eq('provider_id', sitterId)
+      .order('starts_at', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map((slot) => ({
+      id: slot.id,
+      sitter_id: slot.provider_id,
+      date: slot.starts_at.slice(0, 10),
+      available: slot.status === 'available',
+      created_at: slot.created_at,
+    }));
   } catch (err) {
     console.error('getAvailability error:', err);
     return [];
@@ -144,30 +251,29 @@ export async function toggleAvailability(
   available: boolean
 ): Promise<boolean> {
   try {
-    // Provjeri postoji li zapis za taj datum
+    const startsAt = `${dateStr}T00:00:00.000Z`;
+    const endsAt = `${dateStr}T23:59:59.000Z`;
     const { data: existing } = await supabase
-      .from('availability')
+      .from('availability_slots')
       .select('id')
-      .eq('sitter_id', sitterId)
-      .eq('date', dateStr)
-      .single();
+      .eq('provider_id', sitterId)
+      .gte('starts_at', startsAt)
+      .lte('starts_at', endsAt)
+      .maybeSingle();
 
     if (existing) {
-      // Ažuriraj postojeći
       const { error } = await supabase
-        .from('availability')
-        .update({ available })
+        .from('availability_slots')
+        .update({ status: available ? 'available' : 'unavailable' })
         .eq('id', existing.id);
-
       if (error) throw error;
     } else {
-      // Kreiraj novi
-      const { error } = await supabase.from('availability').insert({
-        sitter_id: sitterId,
-        date: dateStr,
-        available,
+      const { error } = await supabase.from('availability_slots').insert({
+        provider_id: sitterId,
+        starts_at: startsAt,
+        ends_at: endsAt,
+        status: available ? 'available' : 'unavailable',
       });
-
       if (error) throw error;
     }
 
@@ -184,17 +290,10 @@ export async function setBulkAvailability(
   available: boolean
 ): Promise<boolean> {
   try {
-    const records = dates.map((date) => ({
-      sitter_id: sitterId,
-      date,
-      available,
-    }));
-
-    const { error } = await supabase.from('availability').upsert(records, {
-      onConflict: 'sitter_id,date',
-    });
-
-    if (error) throw error;
+    for (const date of dates) {
+      const ok = await toggleAvailability(sitterId, date, available);
+      if (!ok) return false;
+    }
     return true;
   } catch (err) {
     console.error('setBulkAvailability error:', err);
@@ -206,27 +305,33 @@ export async function setBulkAvailability(
 
 export async function getSitterReviews(sitterId: string): Promise<Review[]> {
   try {
+    const { data: provider } = await supabase
+      .from('providers')
+      .select('profile_id')
+      .eq('id', sitterId)
+      .maybeSingle();
+    const revieweeProfileId = provider?.profile_id || sitterId;
+
     const { data, error } = await supabase
       .from('reviews')
       .select(`
-        id,
-        booking_id,
-        reviewer_id,
-        rating,
-        comment,
-        created_at,
-        reviewer:users!reviewer_id(name, avatar_url)
+        id, booking_id, reviewer_profile_id, rating, comment, created_at,
+        reviewer:profiles!reviews_reviewer_profile_id_fkey(display_name, avatar_url)
       `)
-      .eq('reviewee_id', sitterId)
+      .eq('reviewee_profile_id', revieweeProfileId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-
     return (data || []).map((row: any) => ({
-      ...row,
+      id: row.id,
+      booking_id: row.booking_id,
+      reviewer_id: row.reviewer_profile_id,
+      rating: row.rating,
+      comment: row.comment,
+      created_at: row.created_at,
       reviewer: row.reviewer
         ? {
-            name: row.reviewer.name,
+            name: row.reviewer.display_name || 'Korisnik',
             avatar_url: row.reviewer.avatar_url,
           }
         : undefined,
@@ -238,33 +343,13 @@ export async function getSitterReviews(sitterId: string): Promise<Review[]> {
 }
 
 // ─── Pet Updates ──────────────────────────────────────────────────
+// Remote schema does not have draft pet update rows yet. Keep the MVP safe and quiet.
 
-export async function getRecentUpdates(sitterId: string): Promise<PetUpdate[]> {
-  try {
-    const { data, error } = await supabase
-      .from('pet_updates')
-      .select(`
-        id,
-        booking_id,
-        type,
-        emoji,
-        caption,
-        photo_url,
-        created_at
-      `)
-      .eq('sitter_id', sitterId)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (error) throw error;
-    return (data || []) as PetUpdate[];
-  } catch (err) {
-    console.error('getRecentUpdates error:', err);
-    return [];
-  }
+export async function getRecentUpdates(_sitterId: string): Promise<PetUpdate[]> {
+  return [];
 }
 
-export async function createPetUpdate(updateData: {
+export async function createPetUpdate(_updateData: {
   booking_id: string;
   sitter_id: string;
   type: 'photo' | 'video' | 'text';
@@ -272,19 +357,7 @@ export async function createPetUpdate(updateData: {
   caption: string;
   photo_url: string | null;
 }): Promise<PetUpdate | null> {
-  try {
-    const { data, error } = await supabase
-      .from('pet_updates')
-      .insert(updateData)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as PetUpdate;
-  } catch (err) {
-    console.error('createPetUpdate error:', err);
-    return null;
-  }
+  return null;
 }
 
 // ─── Earnings ─────────────────────────────────────────────────────
@@ -305,47 +378,17 @@ export async function getSitterEarnings(sitterId: string): Promise<{
     const { data, error } = await supabase
       .from('bookings')
       .select(`
-        id,
-        owner_id,
-        sitter_id,
-        pet_id,
-        service_type,
-        start_date,
-        end_date,
-        status,
-        total_price,
-        created_at,
-        owner:users!owner_id(id, name, avatar_url, email),
-        pet:pets(id, name, species, breed, special_needs)
+        id, owner_profile_id, provider_id, pet_id, primary_service_code,
+        starts_at, ends_at, status, total_amount, provider_note, owner_note, created_at,
+        owner:profiles!bookings_owner_profile_id_fkey(id, display_name, avatar_url, email),
+        pet:pets!bookings_pet_id_fkey(id, name, species, breed, special_needs)
       `)
-      .eq('sitter_id', sitterId)
+      .eq('provider_id', sitterId)
       .eq('status', 'completed');
 
     if (error) throw error;
-
-    const completedBookings = (data || []).map((row: any) => ({
-      ...row,
-      owner: row.owner
-        ? {
-            id: row.owner.id,
-            name: row.owner.name,
-            avatar_url: row.owner.avatar_url,
-            email: row.owner.email,
-          }
-        : undefined,
-      pet: row.pet
-        ? {
-            id: row.pet.id,
-            name: row.pet.name,
-            species: row.pet.species,
-            breed: row.pet.breed,
-            special_needs: row.pet.special_needs,
-          }
-        : undefined,
-    })) as Booking[];
-
+    const completedBookings = (data || []).map(toBooking);
     const totalEarnings = completedBookings.reduce((sum, b) => sum + b.total_price, 0);
-
     const now = new Date();
     const thisMonthEarnings = completedBookings
       .filter((b) => {
@@ -354,7 +397,6 @@ export async function getSitterEarnings(sitterId: string): Promise<{
       })
       .reduce((sum, b) => sum + b.total_price, 0);
 
-    // Monthly earnings for last 6 months
     const monthlyEarnings: MonthlyEarnings[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
@@ -364,28 +406,17 @@ export async function getSitterEarnings(sitterId: string): Promise<{
         const bd = new Date(b.end_date);
         return bd.getMonth() === d.getMonth() && bd.getFullYear() === d.getFullYear();
       });
-      const amount = monthBookings.reduce((sum, b) => sum + b.total_price, 0);
       monthlyEarnings.push({
         month: monthStr,
-        amount,
+        amount: monthBookings.reduce((sum, b) => sum + b.total_price, 0),
         bookingCount: monthBookings.length,
       });
     }
 
-    return {
-      totalEarnings,
-      thisMonthEarnings,
-      monthlyEarnings,
-      completedBookings,
-    };
+    return { totalEarnings, thisMonthEarnings, monthlyEarnings, completedBookings };
   } catch (err) {
     console.error('getSitterEarnings error:', err);
-    return {
-      totalEarnings: 0,
-      thisMonthEarnings: 0,
-      monthlyEarnings: [],
-      completedBookings: [],
-    };
+    return { totalEarnings: 0, thisMonthEarnings: 0, monthlyEarnings: [], completedBookings: [] };
   }
 }
 
@@ -393,145 +424,127 @@ export async function getSitterEarnings(sitterId: string): Promise<{
 
 export async function getConversationSummaries(userId: string): Promise<ConversationSummary[]> {
   try {
-    // Pokušaj koristiti RPC funkciju ako postoji
-    const { data: rpcData, error: rpcError } = await supabase
-      .rpc('get_message_conversation_summaries', {
-        p_user_id: userId,
-      });
+    const { data: participants, error: participantError } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id, profile_id, last_read_at, created_at')
+      .eq('profile_id', userId);
 
-    if (!rpcError && rpcData) {
-      return (rpcData as any[]).map((row) => ({
-        partnerId: row.partner_id,
-        partnerName: row.partner_name || 'Korisnik',
-        partnerAvatar: row.partner_avatar,
-        lastMessage: row.last_message_id
-          ? {
-              id: row.last_message_id,
-              sender_id: row.last_message_sender_id || userId,
-              receiver_id: row.last_message_receiver_id || row.partner_id,
-              booking_id: row.last_message_booking_id,
-              content: row.last_message_content,
-              image_url: row.last_message_image_url,
-              read: row.last_message_read ?? true,
-              created_at: row.last_message_created_at || new Date().toISOString(),
-            }
-          : null,
-        unreadCount: row.unread_count ?? 0,
-      }));
-    }
+    if (participantError) throw participantError;
+    const conversationIds = (participants || []).map((p) => p.conversation_id);
+    if (conversationIds.length === 0) return [];
 
-    // Fallback: ručno grupiranje poruka
-    const { data, error } = await supabase
+    const { data: allParticipants } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id, profile_id, last_read_at, created_at')
+      .in('conversation_id', conversationIds);
+
+    const partnerIds = (allParticipants || [])
+      .filter((p) => p.profile_id !== userId)
+      .map((p) => p.profile_id);
+
+    const { data: profiles } = partnerIds.length
+      ? await supabase.from('profiles').select('id, display_name, avatar_url, email').in('id', partnerIds)
+      : { data: [] as any[] };
+
+    const { data: messages } = await supabase
       .from('messages')
-      .select(`
-        id,
-        sender_id,
-        receiver_id,
-        booking_id,
-        content,
-        image_url,
-        read,
-        created_at,
-        sender:users!sender_id(id, name, avatar_url, role)
-      `)
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .select('id, conversation_id, sender_profile_id, content, image_storage_path, message_type, created_at, deleted_at')
+      .in('conversation_id', conversationIds)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    return conversationIds
+      .map((conversationId) => {
+        const conversationParticipants = (allParticipants || []).filter(
+          (p) => p.conversation_id === conversationId
+        ) as ConversationParticipant[];
+        const partner = conversationParticipants.find((p) => p.profile_id !== userId);
+        if (!partner) return null;
 
-    const messages = (data || []).map((item: any) => ({
-      ...item,
-      sender: Array.isArray(item.sender) ? item.sender[0] : item.sender,
-    })) as Message[];
-
-    const grouped = new Map<string, Message[]>();
-
-    for (const message of messages) {
-      const partnerId = message.sender_id === userId ? message.receiver_id : message.sender_id;
-      const existing = grouped.get(partnerId) || [];
-      existing.push(message);
-      grouped.set(partnerId, existing);
-    }
-
-    return Array.from(grouped.entries())
-      .map(([partnerId, convoMessages]) => {
-        const sorted = convoMessages.sort(
-          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        const profile = (profiles || []).find((p: any) => p.id === partner.profile_id);
+        const convoMessages = ((messages || []) as RemoteMessage[]).filter(
+          (m) => m.conversation_id === conversationId
         );
-        const lastMessage = sorted[sorted.length - 1] || null;
-        const partnerName =
-          lastMessage?.sender_id === userId
-            ? 'Korisnik'
-            : lastMessage?.sender?.name || 'Korisnik';
-        const partnerAvatar =
-          lastMessage?.sender_id === userId ? null : lastMessage?.sender?.avatar_url || null;
-        const unreadCount = sorted.filter((msg) => !msg.read && msg.receiver_id === userId).length;
+        const last = convoMessages[0];
+        const mine = conversationParticipants.find((p) => p.profile_id === userId);
+        const lastReadAt = mine?.last_read_at ? new Date(mine.last_read_at).getTime() : 0;
+        const unreadCount = convoMessages.filter(
+          (m) => m.sender_profile_id !== userId && new Date(m.created_at).getTime() > lastReadAt
+        ).length;
 
         return {
-          partnerId,
-          partnerName,
-          partnerAvatar,
-          lastMessage,
+          partnerId: partner.profile_id,
+          partnerName: profile?.display_name || profile?.email || 'Korisnik',
+          partnerAvatar: profile?.avatar_url || null,
+          lastMessage: last ? toMessage(last, partner.profile_id) : null,
           unreadCount,
-        };
+        } satisfies ConversationSummary;
       })
+      .filter(Boolean)
       .sort((a, b) => {
-        const aTime = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : 0;
-        const bTime = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : 0;
+        const aTime = a?.lastMessage ? new Date(a.lastMessage.created_at).getTime() : 0;
+        const bTime = b?.lastMessage ? new Date(b.lastMessage.created_at).getTime() : 0;
         return bTime - aTime;
-      });
+      }) as ConversationSummary[];
   } catch (err) {
     console.error('getConversationSummaries error:', err);
     return [];
   }
 }
 
-export async function getMessagesForConversation(
-  userId: string,
-  partnerId: string
-): Promise<Message[]> {
+export async function getMessagesForConversation(userId: string, partnerId: string): Promise<Message[]> {
   try {
+    const conversationId = await findConversationBetween(userId, partnerId);
+    if (!conversationId) return [];
+
     const { data, error } = await supabase
       .from('messages')
-      .select(`
-        id,
-        sender_id,
-        receiver_id,
-        booking_id,
-        content,
-        image_url,
-        read,
-        created_at,
-        sender:users!sender_id(id, name, avatar_url, role)
-      `)
-      .or(
-        `and(sender_id.eq.${userId},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${userId})`
-      )
+      .select('id, conversation_id, sender_profile_id, content, image_storage_path, message_type, created_at, deleted_at')
+      .eq('conversation_id', conversationId)
+      .is('deleted_at', null)
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return (data || []).map((item: any) => ({
-      ...item,
-      sender: Array.isArray(item.sender) ? item.sender[0] : item.sender,
-    })) as Message[];
+    return ((data || []) as RemoteMessage[]).map((row) => {
+      const message = toMessage(row, partnerId);
+      message.receiver_id = row.sender_profile_id === userId ? partnerId : userId;
+      return message;
+    });
   } catch (err) {
     console.error('getMessagesForConversation error:', err);
     return [];
   }
 }
 
-export async function sendMessage(
-  messageData: Omit<Message, 'id' | 'created_at'>
-): Promise<Message | null> {
+export async function sendMessage(messageData: Omit<Message, 'id' | 'created_at'>): Promise<Message | null> {
   try {
+    const conversationId = await getOrCreateConversation(
+      messageData.sender_id,
+      messageData.receiver_id,
+      messageData.booking_id
+    );
     const { data, error } = await supabase
       .from('messages')
-      .insert(messageData)
-      .select()
+      .insert({
+        conversation_id: conversationId,
+        sender_profile_id: messageData.sender_id,
+        content: messageData.content,
+        image_storage_path: messageData.image_url,
+        message_type: messageData.image_url ? 'image' : 'text',
+      })
+      .select('id, conversation_id, sender_profile_id, content, image_storage_path, message_type, created_at, deleted_at')
       .single();
 
     if (error) throw error;
-    return data as Message;
+
+    await supabase
+      .from('conversations')
+      .update({ last_message_at: data.created_at })
+      .eq('id', conversationId);
+
+    const message = toMessage(data as RemoteMessage, messageData.receiver_id, messageData.booking_id);
+    message.receiver_id = messageData.receiver_id;
+    return message;
   } catch (err) {
     console.error('sendMessage error:', err);
     return null;
@@ -540,12 +553,13 @@ export async function sendMessage(
 
 export async function markMessagesAsRead(userId: string, partnerId: string): Promise<void> {
   try {
+    const conversationId = await findConversationBetween(userId, partnerId);
+    if (!conversationId) return;
     await supabase
-      .from('messages')
-      .update({ read: true })
-      .eq('sender_id', partnerId)
-      .eq('receiver_id', userId)
-      .eq('read', false);
+      .from('conversation_participants')
+      .update({ last_read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .eq('profile_id', userId);
   } catch (err) {
     console.error('markMessagesAsRead error:', err);
   }
@@ -553,14 +567,8 @@ export async function markMessagesAsRead(userId: string, partnerId: string): Pro
 
 export async function getUnreadMessagesCount(userId: string): Promise<number> {
   try {
-    const { count, error } = await supabase
-      .from('messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('receiver_id', userId)
-      .eq('read', false);
-
-    if (error) throw error;
-    return count || 0;
+    const summaries = await getConversationSummaries(userId);
+    return summaries.reduce((sum, summary) => sum + summary.unreadCount, 0);
   } catch (err) {
     console.error('getUnreadMessagesCount error:', err);
     return 0;

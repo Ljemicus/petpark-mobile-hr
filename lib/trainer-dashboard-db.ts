@@ -33,9 +33,12 @@ export async function updateTrainerProfile(
   updates: Partial<TrainerProfile>
 ): Promise<TrainerProfile | null> {
   try {
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([, value]) => value !== undefined && value !== null)
+    );
     const { data, error } = await supabase
       .from('trainers')
-      .update(updates)
+      .update(cleanUpdates)
       .eq('id', trainerId)
       .select()
       .single();
@@ -56,7 +59,6 @@ export async function getTrainerBookings(trainerId: string): Promise<TrainerBook
       .from('trainer_bookings')
       .select(`
         *,
-        client:users!user_id(id, name, avatar_url, email, phone),
         program:training_programs(id, name, type, duration_weeks, sessions, price)
       `)
       .eq('trainer_id', trainerId)
@@ -246,7 +248,10 @@ export async function getTrainerPrograms(trainerId: string): Promise<TrainingPro
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map((program) => ({
+      ...program,
+      type: program.type as TrainingProgram['type'],
+    }));
   } catch (err) {
     console.error('getTrainerPrograms error:', err);
     return [];
@@ -313,19 +318,25 @@ export async function getTrainerReviews(trainerId: string): Promise<TrainerRevie
     const { data, error } = await supabase
       .from('reviews')
       .select(`
-        *,
-        reviewer:users!reviewer_id(name, avatar_url)
+        id, booking_id, reviewer_profile_id, reviewee_profile_id, rating, comment, created_at,
+        reviewer:profiles!reviews_reviewer_profile_id_fkey(display_name, avatar_url)
       `)
-      .eq('reviewee_id', trainerId)
+      .eq('reviewee_profile_id', trainerId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     return (data || []).map((row: any) => ({
-      ...row,
+      id: row.id,
+      booking_id: row.booking_id,
+      reviewer_id: row.reviewer_profile_id,
+      reviewee_id: row.reviewee_profile_id,
+      rating: row.rating,
+      comment: row.comment,
+      created_at: row.created_at,
       reviewer: row.reviewer
         ? {
-            name: row.reviewer.name,
+            name: row.reviewer.display_name || 'Korisnik',
             avatar_url: row.reviewer.avatar_url,
           }
         : undefined,
@@ -349,7 +360,6 @@ export async function getTrainerEarnings(trainerId: string): Promise<{
       .from('trainer_bookings')
       .select(`
         *,
-        client:users!user_id(id, name, avatar_url, email, phone),
         program:training_programs(id, name, type, price)
       `)
       .eq('trainer_id', trainerId)
@@ -424,14 +434,35 @@ export async function getTrainerEarnings(trainerId: string): Promise<{
 
 export async function getUnreadMessagesCount(userId: string): Promise<number> {
   try {
-    const { count, error } = await supabase
+    const { data: participants, error: participantError } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id, last_read_at')
+      .eq('profile_id', userId);
+
+    if (participantError) throw participantError;
+    const conversationIds = (participants || []).map((p) => p.conversation_id);
+    if (conversationIds.length === 0) return 0;
+
+    const lastReadByConversation = new Map(
+      (participants || []).map((p) => [
+        p.conversation_id,
+        p.last_read_at ? new Date(p.last_read_at).getTime() : 0,
+      ])
+    );
+
+    const { data: messages, error } = await supabase
       .from('messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('receiver_id', userId)
-      .eq('read', false);
+      .select('conversation_id, sender_profile_id, created_at')
+      .in('conversation_id', conversationIds)
+      .neq('sender_profile_id', userId)
+      .is('deleted_at', null);
 
     if (error) throw error;
-    return count || 0;
+    return (messages || []).filter(
+      (message) =>
+        new Date(message.created_at).getTime() >
+        (lastReadByConversation.get(message.conversation_id) || 0)
+    ).length;
   } catch (err) {
     console.error('getUnreadMessagesCount error:', err);
     return 0;
@@ -454,8 +485,7 @@ export async function getTrainerClients(trainerId: string): Promise<{
       .from('trainer_bookings')
       .select(`
         user_id,
-        date,
-        client:users!user_id(id, name, avatar_url, email, phone)
+        date
       `)
       .eq('trainer_id', trainerId)
       .order('date', { ascending: false });

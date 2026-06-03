@@ -3,113 +3,105 @@
 
 import { supabase } from './supabase';
 import type { Walk, WalkWithDetails } from './walk-types';
+import type { Json } from './database.types';
+
+type RemoteWalk = {
+  id: string;
+  booking_id: string;
+  provider_id: string;
+  owner_profile_id: string;
+  pet_id: string;
+  started_at: string | null;
+  ended_at: string | null;
+  status: string;
+  distance_km: number | null;
+  route_geojson: Json | null;
+  created_at: string;
+  pets?: { name?: string | null; species?: string | null } | null;
+  provider?: { display_name?: string | null } | null;
+};
+
+function routeFromJson(value: Json | null): { lat: number; lng: number }[] {
+  return Array.isArray(value)
+    ? value.filter((point): point is { lat: number; lng: number } =>
+        typeof point === 'object' &&
+        point !== null &&
+        typeof (point as any).lat === 'number' &&
+        typeof (point as any).lng === 'number'
+      )
+    : [];
+}
+
+function toWalk(row: RemoteWalk): WalkWithDetails {
+  return {
+    id: row.id,
+    sitter_id: row.provider_id,
+    pet_id: row.pet_id,
+    booking_id: row.booking_id,
+    start_time: row.started_at || row.created_at,
+    end_time: row.ended_at,
+    status: row.status === 'completed' || row.status === 'zavrsena' ? 'zavrsena' : 'u_tijeku',
+    distance_km: row.distance_km ?? 0,
+    route: routeFromJson(row.route_geojson),
+    checkpoints: [],
+    created_at: row.created_at,
+    petName: row.pets?.name ?? undefined,
+    petSpecies: row.pets?.species as WalkWithDetails['petSpecies'],
+    sitterName: row.provider?.display_name ?? undefined,
+  };
+}
+
+const WALK_SELECT = `
+  id, booking_id, provider_id, owner_profile_id, pet_id, started_at, ended_at,
+  status, distance_km, route_geojson, created_at,
+  pets:pets!walks_pet_id_fkey(name, species),
+  provider:providers!walks_provider_id_fkey(display_name)
+`;
 
 // Dohvati walk po ID-u
 export async function getWalkById(id: string): Promise<Walk | null> {
   try {
     const { data, error } = await supabase
       .from('walks')
-      .select('*')
+      .select(WALK_SELECT)
       .eq('id', id)
       .single();
 
     if (error || !data) return null;
-    return data as Walk;
+    return toWalk(data as any);
   } catch {
     return null;
   }
 }
 
-// Dohvati walk-ove za korisnika (sitter ili owner)
+// Dohvati walk-ove za korisnika (provider ili owner profile)
 export async function getWalksForUser(userId: string): Promise<WalkWithDetails[]> {
   try {
-    // Dohvati kao sitter
-    const { data: sitterWalks, error: sitterError } = await supabase
+    const { data, error } = await supabase
       .from('walks')
-      .select(`
-        *,
-        pets:pet_id (name, species),
-        sitter:sitter_id (name)
-      `)
-      .eq('sitter_id', userId)
-      .order('start_time', { ascending: false });
+      .select(WALK_SELECT)
+      .or(`provider_id.eq.${userId},owner_profile_id.eq.${userId}`)
+      .order('started_at', { ascending: false });
 
-    // Dohvati ID-eve ljubimaca koje user posjeduje
-    const { data: pets } = await supabase
-      .from('pets')
-      .select('id')
-      .eq('owner_id', userId);
-
-    const petIds = (pets || []).map((p) => p.id);
-    
-    let ownerWalks: WalkWithDetails[] = [];
-    if (petIds.length > 0) {
-      const { data, error } = await supabase
-        .from('walks')
-        .select(`
-          *,
-          pets:pet_id (name, species),
-          sitter:sitter_id (name)
-        `)
-        .in('pet_id', petIds)
-        .order('start_time', { ascending: false });
-      
-      if (!error && data) {
-        ownerWalks = data.map((w: any) => ({
-          ...w,
-          petName: w.pets?.name,
-          petSpecies: w.pets?.species,
-          sitterName: w.sitter?.name,
-        })) as WalkWithDetails[];
-      }
-    }
-
-    // Spoji i ukloni duplikate
-    const sitterWalksFormatted = (sitterWalks || [])
-      .filter((w: any) => !sitterError)
-      .map((w: any) => ({
-        ...w,
-        petName: w.pets?.name,
-        petSpecies: w.pets?.species,
-        sitterName: w.sitter?.name,
-      })) as WalkWithDetails[];
-
-    const allWalks = [...sitterWalksFormatted, ...ownerWalks];
-    
-    // Ukloni duplikate
-    const seen = new Set<string>();
-    return allWalks.filter((w) => {
-      if (seen.has(w.id)) return false;
-      seen.add(w.id);
-      return true;
-    });
+    if (error || !data) return [];
+    return (data as any[]).map(toWalk);
   } catch {
     return [];
   }
 }
 
-// Dohvati aktivne walk-ove za sittera
+// Dohvati aktivne walk-ove za sittera/providera
 export async function getActiveWalksForSitter(sitterId: string): Promise<WalkWithDetails[]> {
   try {
     const { data, error } = await supabase
       .from('walks')
-      .select(`
-        *,
-        pets:pet_id (name, species),
-        sitter:sitter_id (name)
-      `)
-      .eq('sitter_id', sitterId)
-      .eq('status', 'u_tijeku')
-      .order('start_time', { ascending: false });
+      .select(WALK_SELECT)
+      .eq('provider_id', sitterId)
+      .eq('status', 'active')
+      .order('started_at', { ascending: false });
 
     if (error || !data) return [];
-    
-    return data.map((w: any) => ({
-      ...w,
-      petName: w.pets?.name,
-      petSpecies: w.pets?.species,
-      sitterName: w.sitter?.name,
-    })) as WalkWithDetails[];
+    return (data as any[]).map(toWalk);
   } catch {
     return [];
   }
@@ -120,22 +112,12 @@ export async function getWalksByBooking(bookingId: string): Promise<WalkWithDeta
   try {
     const { data, error } = await supabase
       .from('walks')
-      .select(`
-        *,
-        pets:pet_id (name, species),
-        sitter:sitter_id (name)
-      `)
+      .select(WALK_SELECT)
       .eq('booking_id', bookingId)
-      .order('start_time', { ascending: false });
+      .order('started_at', { ascending: false });
 
     if (error || !data) return [];
-    
-    return data.map((w: any) => ({
-      ...w,
-      petName: w.pets?.name,
-      petSpecies: w.pets?.species,
-      sitterName: w.sitter?.name,
-    })) as WalkWithDetails[];
+    return (data as any[]).map(toWalk);
   } catch {
     return [];
   }
@@ -144,17 +126,32 @@ export async function getWalksByBooking(bookingId: string): Promise<WalkWithDeta
 // Kreiraj novi walk (kada sitter započne šetnju)
 export async function createWalk(walk: Omit<Walk, 'id' | 'created_at'>): Promise<Walk | null> {
   try {
-    const { data, error } = await supabase
-      .from('walks')
-      .insert(walk)
-      .select()
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('owner_profile_id, provider_id, pet_id')
+      .eq('id', walk.booking_id)
       .single();
 
-    if (error || !data) {
-      console.error('Error creating walk:', error);
-      return null;
-    }
-    return data as Walk;
+    if (bookingError || !booking) return null;
+
+    const { data, error } = await supabase
+      .from('walks')
+      .insert({
+        booking_id: walk.booking_id,
+        owner_profile_id: booking.owner_profile_id,
+        provider_id: booking.provider_id || walk.sitter_id,
+        pet_id: booking.pet_id || walk.pet_id,
+        started_at: walk.start_time,
+        ended_at: walk.end_time,
+        status: walk.status === 'zavrsena' ? 'completed' : 'active',
+        distance_km: walk.distance_km,
+        route_geojson: walk.route as unknown as Json,
+      })
+      .select(WALK_SELECT)
+      .single();
+
+    if (error || !data) return null;
+    return toWalk(data as any);
   } catch (err) {
     console.error('Exception creating walk:', err);
     return null;
@@ -162,21 +159,21 @@ export async function createWalk(walk: Omit<Walk, 'id' | 'created_at'>): Promise
 }
 
 // Ažuriraj walk (real-time tracking)
-export async function updateWalk(
-  walkId: string,
-  updates: Partial<Walk>
-): Promise<boolean> {
+export async function updateWalk(walkId: string, updates: Partial<Walk>): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('walks')
-      .update(updates)
-      .eq('id', walkId);
+    const remoteUpdates = {
+      started_at: updates.start_time,
+      ended_at: updates.end_time,
+      status: updates.status === 'zavrsena' ? 'completed' : updates.status === 'u_tijeku' ? 'active' : undefined,
+      distance_km: updates.distance_km,
+      route_geojson: updates.route as unknown as Json | undefined,
+    };
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(remoteUpdates).filter(([, value]) => value !== undefined)
+    );
 
-    if (error) {
-      console.error('Error updating walk:', error);
-      return false;
-    }
-    return true;
+    const { error } = await supabase.from('walks').update(cleanUpdates).eq('id', walkId);
+    return !error;
   } catch (err) {
     console.error('Exception updating walk:', err);
     return false;
@@ -197,16 +194,14 @@ export async function endWalk(
     const { error } = await supabase
       .from('walks')
       .update({
-        ...endData,
-        status: 'zavrsena',
+        ended_at: endData.end_time,
+        distance_km: endData.distance_km,
+        route_geojson: endData.route as unknown as Json,
+        status: 'completed',
       })
       .eq('id', walkId);
 
-    if (error) {
-      console.error('Error ending walk:', error);
-      return false;
-    }
-    return true;
+    return !error;
   } catch (err) {
     console.error('Exception ending walk:', err);
     return false;
@@ -216,30 +211,22 @@ export async function endWalk(
 // Dohvati booking-e dostupne za walk (prihvaćene, s današnjim datumom)
 export async function getAvailableBookingsForWalk(sitterId: string): Promise<any[]> {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    
+    const today = new Date().toISOString();
     const { data, error } = await supabase
       .from('bookings')
-      .select(`
-        id,
-        pet_id,
-        start_date,
-        end_date,
-        pets:pet_id (id, name, species)
-      `)
-      .eq('sitter_id', sitterId)
+      .select('id, pet_id, starts_at, ends_at, pets:pets!bookings_pet_id_fkey(id, name, species)')
+      .eq('provider_id', sitterId)
       .eq('status', 'accepted')
-      .lte('start_date', today)
-      .gte('end_date', today);
+      .lte('starts_at', today)
+      .gte('ends_at', today);
 
     if (error || !data) return [];
-    
-    return data.map((b: any) => ({
-      id: b.id,
-      pet_id: b.pet_id,
-      pet: b.pets,
-      start_date: b.start_date,
-      end_date: b.end_date,
+    return data.map((booking: any) => ({
+      id: booking.id,
+      pet_id: booking.pet_id,
+      pet: booking.pets,
+      start_date: booking.starts_at,
+      end_date: booking.ends_at,
     }));
   } catch {
     return [];
@@ -247,10 +234,7 @@ export async function getAvailableBookingsForWalk(sitterId: string): Promise<any
 }
 
 // Subscribe na walk updates (realtime)
-export function subscribeToWalk(
-  walkId: string,
-  callback: (walk: Walk) => void
-) {
+export function subscribeToWalk(walkId: string, callback: (walk: Walk) => void) {
   const subscription = supabase
     .channel(`walk-${walkId}`)
     .on(
@@ -262,7 +246,7 @@ export function subscribeToWalk(
         filter: `id=eq.${walkId}`,
       },
       (payload) => {
-        callback(payload.new as Walk);
+        callback(toWalk(payload.new as RemoteWalk));
       }
     )
     .subscribe();

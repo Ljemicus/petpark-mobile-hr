@@ -1,4 +1,3 @@
-import { supabase } from './supabase';
 import { PAYMENT_DISABLED_MESSAGE, PAYMENT_DISABLED_TITLE, PAYMENTS_ENABLED } from './payments/config';
 
 export type ProductCategory = 'hrana' | 'igracke' | 'povodci' | 'krevetici' | 'posude' | 'njega' | 'odjeca' | 'grickalice';
@@ -147,55 +146,15 @@ export function formatPrice(amount: number) {
 }
 
 export async function getProducts() {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('id, slug, name, category, price, original_price, description, emoji, brand, rating, review_count, in_stock, variants, specs, images')
-      .order('rating', { ascending: false });
-
-    if (error || !data?.length) return FALLBACK_PRODUCTS;
-    return data.map((row) => mapDbProduct(row as Record<string, unknown>));
-  } catch {
-    return FALLBACK_PRODUCTS;
-  }
+  return FALLBACK_PRODUCTS;
 }
 
 export async function getProductBySlug(slug: string) {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('id, slug, name, category, price, original_price, description, emoji, brand, rating, review_count, in_stock, variants, specs, images')
-      .eq('slug', slug)
-      .single();
-
-    if (error || !data) return FALLBACK_PRODUCTS.find((product) => product.slug === slug) ?? null;
-    return mapDbProduct(data as Record<string, unknown>);
-  } catch {
-    return FALLBACK_PRODUCTS.find((product) => product.slug === slug) ?? null;
-  }
+  return FALLBACK_PRODUCTS.find((product) => product.slug === slug) ?? null;
 }
 
 export async function getProductReviews(productId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('product_reviews')
-      .select('id, product_id, author_name, rating, comment, created_at')
-      .eq('product_id', productId)
-      .order('created_at', { ascending: false });
-
-    if (error || !data) return FALLBACK_REVIEWS.filter((review) => review.productId === productId);
-    return data.map((review) => ({
-      id: String(review.id),
-      productId: String(review.product_id),
-      authorName: String(review.author_name),
-      authorInitial: String(review.author_name ?? '?').charAt(0),
-      rating: Number(review.rating ?? 0),
-      comment: String(review.comment ?? ''),
-      createdAt: String(review.created_at),
-    }));
-  } catch {
-    return FALLBACK_REVIEWS.filter((review) => review.productId === productId);
-  }
+  return FALLBACK_REVIEWS.filter((review) => review.productId === productId);
 }
 
 export async function getRelatedProducts(productId: string, limit = 4) {
@@ -215,48 +174,13 @@ export async function getShopCategories() {
   }));
 }
 
-export async function syncCartToSupabase(userId: string, items: CartItem[]) {
-  try {
-    await supabase.from('cart_items').delete().eq('user_id', userId);
-    if (!items.length) return;
-    await supabase.from('cart_items').insert(items.map((item) => ({
-      user_id: userId,
-      product_id: item.product.id,
-      quantity: item.quantity,
-      selected_variant: item.selectedVariant ?? null,
-      product_snapshot: item.product,
-    })));
-  } catch {
-    // silent fallback, local state remains source of truth in mobile session
-  }
+export async function syncCartToSupabase(_userId: string, _items: CartItem[]) {
+  // Remote shop/cart tables are not part of the current mobile remote schema.
+  // The in-memory shop context remains the source of truth for the MVP.
 }
 
-export async function loadCartFromSupabase(userId: string): Promise<CartItem[]> {
-  try {
-    const { data, error } = await supabase
-      .from('cart_items')
-      .select('quantity, selected_variant, product_snapshot')
-      .eq('user_id', userId);
-
-    if (error || !data) return [];
-
-    const hydrated: CartItem[] = [];
-
-    for (const item of data) {
-      const product = item.product_snapshot as Product | null;
-      if (!product) continue;
-
-      hydrated.push({
-        product,
-        quantity: Number(item.quantity ?? 1),
-        selectedVariant: (item.selected_variant as string | null) ?? undefined,
-      });
-    }
-
-    return hydrated;
-  } catch {
-    return [];
-  }
+export async function loadCartFromSupabase(_userId: string): Promise<CartItem[]> {
+  return [];
 }
 
 export async function createShopCheckout(items: CartItem[], authToken?: string | null) {

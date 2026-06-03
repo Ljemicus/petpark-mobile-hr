@@ -1,8 +1,9 @@
 Files importing mock-data:
 
 TODO / FIXME / not implemented / placeholder markers:
-app/payments/checkout.tsx:263:          <Text style={styles.infoTitle}>{PAYMENTS_ENABLED ? 'Što slijedi nakon plaćanja?' : 'Plaćanje uskoro'}</Text>
-app/payments/checkout.tsx:299:                ? 'Plaćanje uskoro'
+app/payments/checkout.tsx:58:      // Check provider Stripe status (payments remain disabled by config/MVP stubs)
+app/payments/checkout.tsx:254:          <Text style={styles.infoTitle}>{PAYMENTS_ENABLED ? 'Što slijedi nakon plaćanja?' : 'Plaćanje uskoro'}</Text>
+app/payments/checkout.tsx:290:                ? 'Plaćanje uskoro'
 app/walk/active.tsx:230:            placeholder="Npr. Pas je bio veseo, pili smo vodu u parku..."
 app/walk/active.tsx:267:      <View style={styles.mapPlaceholder}>
 app/walk/active.tsx:1053:  mapPlaceholder: {
@@ -113,11 +114,10 @@ app/dashboard/groomer/bookings.tsx:113:        <View style={styles.placeholder} 
 app/dashboard/groomer/bookings.tsx:160:                      <View style={styles.avatarPlaceholder}>
 app/dashboard/groomer/bookings.tsx:289:  placeholder: {
 app/dashboard/groomer/bookings.tsx:362:  avatarPlaceholder: {
-app/dashboard/groomer/profile.tsx:176:        <View style={styles.placeholder} />
-app/dashboard/groomer/profile.tsx:193:                placeholder="Vaše ime ili naziv salona"
-app/dashboard/groomer/profile.tsx:194:                placeholderTextColor={Colors.muted}
-app/dashboard/groomer/profile.tsx:204:                placeholder="Opišite svoje iskustvo i usluge..."
-app/dashboard/groomer/profile.tsx:205:                placeholderTextColor={Colors.muted}
-app/dashboard/groomer/profile.tsx:235:                placeholder="Ulica i broj, grad"
-app/dashboard/groomer/profile.tsx:236:                placeholderTextColor={Colors.muted}
-app/dashboard/groomer/profile.tsx:246:                placeholder="+385 91 234 5678"
+app/dashboard/groomer/profile.tsx:193:        <View style={styles.placeholder} />
+app/dashboard/groomer/profile.tsx:210:                placeholder="Vaše ime ili naziv salona"
+app/dashboard/groomer/profile.tsx:211:                placeholderTextColor={Colors.muted}
+app/dashboard/groomer/profile.tsx:221:                placeholder="Opišite svoje iskustvo i usluge..."
+app/dashboard/groomer/profile.tsx:222:                placeholderTextColor={Colors.muted}
+app/dashboard/groomer/profile.tsx:252:                placeholder="Ulica i broj, grad"
+app/dashboard/groomer/profile.tsx:253:                placeholderTextColor={Colors.muted}

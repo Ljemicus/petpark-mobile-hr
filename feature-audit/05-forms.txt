@@ -11,7 +11,7 @@ Form files and whether they reference a submit + validation:
   app/dashboard/owner/bookings.tsx  submit:7 validation:0
   app/dashboard/owner/pets.tsx  submit:0 validation:0
   app/dashboard/owner/messages.tsx  submit:0 validation:0
-  app/dashboard/groomer/profile.tsx  submit:1 validation:0
+  app/dashboard/groomer/profile.tsx  submit:2 validation:0
   app/dashboard/sitter/bookings.tsx  submit:0 validation:0
   app/dashboard/sitter/messages.tsx  submit:0 validation:0
   app/dashboard/breeder/messages.tsx  submit:0 validation:0
