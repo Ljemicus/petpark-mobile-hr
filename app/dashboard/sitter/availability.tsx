@@ -15,8 +15,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { Availability } from '../../../lib/sitter-dashboard-types';
-import { getAvailability, toggleAvailability, setBulkAvailability } from '../../../lib/sitter-dashboard-db';
+import {
+  getAvailability,
+  toggleAvailability,
+  setBulkAvailability,
+  getSitterDashboardLastError,
+  clearSitterDashboardLastError,
+} from '../../../lib/sitter-dashboard-db';
 
 // Helper funkcije za datum
 const getMonthData = (year: number, month: number) => {
@@ -58,6 +65,7 @@ export default function SitterAvailabilityScreen() {
   const [availability, setAvailability] = useState<Availability[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectionMode, setSelectionMode] = useState(false);
@@ -70,10 +78,15 @@ export default function SitterAvailabilityScreen() {
     if (!userId) return;
 
     try {
+      clearSitterDashboardLastError();
+      setLoadError(null);
       const data = await getAvailability(userId);
       setAvailability(data);
+      const sitterError = getSitterDashboardLastError();
+      if (sitterError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching availability:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -299,6 +312,8 @@ export default function SitterAvailabilityScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={styles.scrollContent}
       >
+        {loadError ? <InlineErrorState message={loadError} onRetry={fetchAvailability} /> : null}
+
         {/* Day headers */}
         <View style={styles.dayHeaders}>
           {['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'].map((day) => (

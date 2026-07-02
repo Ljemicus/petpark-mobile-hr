@@ -17,9 +17,14 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { Booking, MonthlyEarnings } from '../../../lib/sitter-dashboard-types';
 import { SERVICE_LABELS } from '../../../lib/sitter-dashboard-types';
-import { getSitterEarnings } from '../../../lib/sitter-dashboard-db';
+import {
+  getSitterEarnings,
+  getSitterDashboardLastError,
+  clearSitterDashboardLastError,
+} from '../../../lib/sitter-dashboard-db';
 
 const { width } = Dimensions.get('window');
 
@@ -117,6 +122,7 @@ export default function SitterEarningsScreen() {
   });
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'year' | 'all'>('month');
 
   const userId = session?.user?.id;
@@ -126,10 +132,15 @@ export default function SitterEarningsScreen() {
     if (!userId) return;
 
     try {
+      clearSitterDashboardLastError();
+      setLoadError(null);
       const data = await getSitterEarnings(userId);
       setEarnings(data);
+      const sitterError = getSitterDashboardLastError();
+      if (sitterError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching earnings:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -165,6 +176,8 @@ export default function SitterEarningsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
+        {loadError ? <InlineErrorState message={loadError} onRetry={fetchEarnings} /> : null}
+
         {/* Total Earnings Card */}
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>Ukupna zarada</Text>

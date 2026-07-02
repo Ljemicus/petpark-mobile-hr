@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { Booking, Review, SitterProfile } from '../../../lib/sitter-dashboard-types';
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../../../lib/sitter-dashboard-types';
 import {
@@ -25,6 +26,8 @@ import {
   getSitterReviews,
   getUnreadMessagesCount,
   getSitterEarnings,
+  getSitterDashboardLastError,
+  clearSitterDashboardLastError,
 } from '../../../lib/sitter-dashboard-db';
 
 const { width } = Dimensions.get('window');
@@ -153,6 +156,7 @@ export default function SitterDashboardScreen() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const userId = session?.user?.id;
   const userName = user?.name?.split(' ')[0] || 'Sitter';
@@ -165,6 +169,8 @@ export default function SitterDashboardScreen() {
     if (!userId) return;
 
     try {
+      clearSitterDashboardLastError();
+      setLoadError(null);
       const [profileData, bookingsData, reviewsData, earningsData, unreadData] = await Promise.all([
         getSitterProfile(userId),
         getSitterBookings(userId),
@@ -178,8 +184,11 @@ export default function SitterDashboardScreen() {
       setReviews(reviewsData);
       setEarnings(earningsData);
       setUnreadCount(unreadData);
+      const sitterError = getSitterDashboardLastError();
+      if (sitterError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching sitter dashboard data:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -241,6 +250,8 @@ export default function SitterDashboardScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {loadError ? <InlineErrorState message={loadError} onRetry={fetchData} /> : null}
 
         {/* New Sitter Banner */}
         {isNewSitter && (

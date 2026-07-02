@@ -19,12 +19,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { Booking, PetUpdate } from '../../../lib/sitter-dashboard-types';
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../../../lib/sitter-dashboard-types';
 import {
   getSitterBookings,
   updateBookingStatus,
   createPetUpdate,
+  getSitterDashboardLastError,
+  clearSitterDashboardLastError,
 } from '../../../lib/sitter-dashboard-db';
 
 type BookingFilter = 'all' | 'pending' | 'accepted' | 'completed';
@@ -198,6 +201,7 @@ export default function SitterBookingsScreen() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<BookingFilter>('all');
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string>('');
@@ -215,10 +219,15 @@ export default function SitterBookingsScreen() {
     if (!userId) return;
 
     try {
+      clearSitterDashboardLastError();
+      setLoadError(null);
       const data = await getSitterBookings(userId);
       setBookings(data);
+      const sitterError = getSitterDashboardLastError();
+      if (sitterError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching bookings:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -357,6 +366,7 @@ export default function SitterBookingsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={styles.scrollContent}
       >
+        {loadError ? <InlineErrorState message={loadError} onRetry={fetchBookings} /> : null}
         {filteredBookings.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyStateIcon}>

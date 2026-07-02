@@ -11,6 +11,43 @@ import type {
   ConversationSummary,
 } from './sitter-dashboard-types';
 
+export type SitterDashboardErrorKind = 'network' | 'auth' | 'unknown';
+
+type SitterDashboardLastError = {
+  kind: SitterDashboardErrorKind;
+  message: string;
+  source: string;
+  at: string;
+};
+
+let sitterDashboardLastError: SitterDashboardLastError | null = null;
+
+function classifySitterDashboardError(err: unknown): SitterDashboardErrorKind {
+  const message = err instanceof Error ? err.message.toLowerCase() : String(err ?? '').toLowerCase();
+  if (message.includes('jwt') || message.includes('auth') || message.includes('permission') || message.includes('rls')) return 'auth';
+  if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) return 'network';
+  return 'unknown';
+}
+
+function recordSitterDashboardError(source: string, err: unknown) {
+  const message = err instanceof Error ? err.message : 'Nepoznata greška';
+  sitterDashboardLastError = {
+    kind: classifySitterDashboardError(err),
+    message,
+    source,
+    at: new Date().toISOString(),
+  };
+  console.error(`[sitter-dashboard-db] ${source} failed:`, err);
+}
+
+export function getSitterDashboardLastError() {
+  return sitterDashboardLastError;
+}
+
+export function clearSitterDashboardLastError() {
+  sitterDashboardLastError = null;
+}
+
 type RemoteMessage = {
   id: string;
   conversation_id: string;
@@ -153,7 +190,7 @@ export async function getSitterProfile(userId: string): Promise<SitterProfile | 
       ...settings,
     } as SitterProfile;
   } catch (err) {
-    console.error('getSitterProfile error:', err);
+    recordSitterDashboardError('getSitterProfile', err);
     return null;
   }
 }
@@ -179,7 +216,7 @@ export async function updateSitterProfile(
     if (error) throw error;
     return getSitterProfile(userId);
   } catch (err) {
-    console.error('updateSitterProfile error:', err);
+    recordSitterDashboardError('updateSitterProfile', err);
     return null;
   }
 }
@@ -202,7 +239,7 @@ export async function getSitterBookings(sitterId: string): Promise<Booking[]> {
     if (error) throw error;
     return (data || []).map(toBooking);
   } catch (err) {
-    console.error('getSitterBookings error:', err);
+    recordSitterDashboardError('getSitterBookings', err);
     return [];
   }
 }
@@ -216,7 +253,7 @@ export async function updateBookingStatus(
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('updateBookingStatus error:', err);
+    recordSitterDashboardError('updateBookingStatus', err);
     return false;
   }
 }
@@ -240,7 +277,7 @@ export async function getAvailability(sitterId: string): Promise<Availability[]>
       created_at: slot.created_at,
     }));
   } catch (err) {
-    console.error('getAvailability error:', err);
+    recordSitterDashboardError('getAvailability', err);
     return [];
   }
 }
@@ -279,7 +316,7 @@ export async function toggleAvailability(
 
     return true;
   } catch (err) {
-    console.error('toggleAvailability error:', err);
+    recordSitterDashboardError('toggleAvailability', err);
     return false;
   }
 }
@@ -296,7 +333,7 @@ export async function setBulkAvailability(
     }
     return true;
   } catch (err) {
-    console.error('setBulkAvailability error:', err);
+    recordSitterDashboardError('setBulkAvailability', err);
     return false;
   }
 }
@@ -337,7 +374,7 @@ export async function getSitterReviews(sitterId: string): Promise<Review[]> {
         : undefined,
     }));
   } catch (err) {
-    console.error('getSitterReviews error:', err);
+    recordSitterDashboardError('getSitterReviews', err);
     return [];
   }
 }
@@ -415,7 +452,7 @@ export async function getSitterEarnings(sitterId: string): Promise<{
 
     return { totalEarnings, thisMonthEarnings, monthlyEarnings, completedBookings };
   } catch (err) {
-    console.error('getSitterEarnings error:', err);
+    recordSitterDashboardError('getSitterEarnings', err);
     return { totalEarnings: 0, thisMonthEarnings: 0, monthlyEarnings: [], completedBookings: [] };
   }
 }
@@ -487,7 +524,7 @@ export async function getConversationSummaries(userId: string): Promise<Conversa
         return bTime - aTime;
       }) as ConversationSummary[];
   } catch (err) {
-    console.error('getConversationSummaries error:', err);
+    recordSitterDashboardError('getConversationSummaries', err);
     return [];
   }
 }
@@ -511,7 +548,7 @@ export async function getMessagesForConversation(userId: string, partnerId: stri
       return message;
     });
   } catch (err) {
-    console.error('getMessagesForConversation error:', err);
+    recordSitterDashboardError('getMessagesForConversation', err);
     return [];
   }
 }
@@ -546,7 +583,7 @@ export async function sendMessage(messageData: Omit<Message, 'id' | 'created_at'
     message.receiver_id = messageData.receiver_id;
     return message;
   } catch (err) {
-    console.error('sendMessage error:', err);
+    recordSitterDashboardError('sendMessage', err);
     return null;
   }
 }
@@ -561,7 +598,7 @@ export async function markMessagesAsRead(userId: string, partnerId: string): Pro
       .eq('conversation_id', conversationId)
       .eq('profile_id', userId);
   } catch (err) {
-    console.error('markMessagesAsRead error:', err);
+    recordSitterDashboardError('markMessagesAsRead', err);
   }
 }
 
@@ -570,7 +607,7 @@ export async function getUnreadMessagesCount(userId: string): Promise<number> {
     const summaries = await getConversationSummaries(userId);
     return summaries.reduce((sum, summary) => sum + summary.unreadCount, 0);
   } catch (err) {
-    console.error('getUnreadMessagesCount error:', err);
+    recordSitterDashboardError('getUnreadMessagesCount', err);
     return 0;
   }
 }

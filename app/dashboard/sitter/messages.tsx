@@ -18,12 +18,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { Message, ConversationSummary } from '../../../lib/sitter-dashboard-types';
 import {
   getConversationSummaries,
   getMessagesForConversation,
   sendMessage,
   markMessagesAsRead,
+  getSitterDashboardLastError,
+  clearSitterDashboardLastError,
 } from '../../../lib/sitter-dashboard-db';
 
 // Conversation list item
@@ -140,6 +143,7 @@ export default function SitterMessagesScreen() {
   const [newMessage, setNewMessage] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   const userId = session?.user?.id;
@@ -149,10 +153,15 @@ export default function SitterMessagesScreen() {
     if (!userId) return;
 
     try {
+      clearSitterDashboardLastError();
+      setLoadError(null);
       const data = await getConversationSummaries(userId);
       setConversations(data);
+      const sitterError = getSitterDashboardLastError();
+      if (sitterError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching conversations:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -163,8 +172,12 @@ export default function SitterMessagesScreen() {
     if (!userId || !activeConversation) return;
 
     try {
+      clearSitterDashboardLastError();
+      setLoadError(null);
       const data = await getMessagesForConversation(userId, activeConversation.partnerId);
       setMessages(data);
+      const sitterError = getSitterDashboardLastError();
+      if (sitterError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
       // Označi kao pročitano
       await markMessagesAsRead(userId, activeConversation.partnerId);
       // Osvježi listu razgovora
@@ -247,6 +260,8 @@ export default function SitterMessagesScreen() {
           <View style={styles.headerSpacer} />
         </View>
 
+        {loadError ? <InlineErrorState message={loadError} onRetry={fetchMessages} /> : null}
+
         {/* Messages */}
         <FlatList
           ref={flatListRef}
@@ -305,7 +320,7 @@ export default function SitterMessagesScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={styles.conversationsList}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          loadError ? <InlineErrorState message={loadError} onRetry={fetchConversations} /> : <View style={styles.emptyState}>
             <View style={styles.emptyStateIcon}>
               <Ionicons name="chatbubble-outline" size={60} color={Colors.muted} />
             </View>
