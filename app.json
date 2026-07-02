@@ -36,7 +36,8 @@
     "scheme": "petpark",
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "@sentry/react-native"
     ],
     "extra": {
       "router": {},

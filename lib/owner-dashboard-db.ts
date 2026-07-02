@@ -1,6 +1,7 @@
 // Database funkcije za Owner Dashboard
 
 import { supabase } from './supabase';
+import { captureAppError } from './sentry';
 import type { Pet, Booking, Message, ConversationSummary } from './owner-dashboard-types';
 
 export type OwnerDashboardErrorKind = 'network' | 'auth' | 'unknown';
@@ -30,6 +31,7 @@ function recordOwnerDashboardError(source: string, err: unknown) {
     at: new Date().toISOString(),
   };
   console.error(`[owner-dashboard-db] ${source} failed:`, err);
+  captureAppError(`owner-dashboard-db.${source}`, err);
 }
 
 export function getOwnerDashboardLastError() {

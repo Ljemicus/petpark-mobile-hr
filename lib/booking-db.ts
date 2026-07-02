@@ -2,6 +2,7 @@
 
 import { supabase } from './supabase';
 import type { Booking, CreateBookingInput, SitterInfo, ServiceType, Availability, Species, PaymentStatus } from './booking-types';
+import { captureAppError } from './sentry';
 import { DEFAULT_SERVICE_PRICES, PLATFORM_FEE_PERCENTAGE } from './booking-types';
 
 export type BookingDbErrorKind = 'network' | 'auth' | 'unknown';
@@ -31,6 +32,7 @@ function recordBookingDbError(source: string, err: unknown) {
     at: new Date().toISOString(),
   };
   console.error(`[booking-db] ${source} failed:`, err);
+  captureAppError(`booking-db.${source}`, err);
 }
 
 export function getBookingDbLastError() {

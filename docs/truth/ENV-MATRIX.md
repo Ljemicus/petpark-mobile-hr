@@ -72,6 +72,7 @@ No values printed; env var names only.
 | Varijabla | Ref count | Local | Preview | Prod | Obavezna? | Missing behavior / napomena |
 |---|---:|---|---|---|---|---|
 | `EXPO_PUBLIC_API_URL` | 2 | set | set | set | NE/feature | API base URL / feature endpoint; verify fallback behavior in KIT-E. |
+| `EXPO_PUBLIC_SENTRY_DSN` | 1 | optional | optional | set when approved | NE/feature | Enables Sentry RN capture; missing value is fail-closed/no-op. |
 | `EXPO_PUBLIC_SUPABASE_URL` | 1 | set | set | set | DA | Required for remote Supabase access. |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | 1 | set | set | set | DA | Required for remote Supabase access. |
 

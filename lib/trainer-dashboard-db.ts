@@ -9,6 +9,7 @@ import type {
   TrainerReview,
   MonthlyEarnings,
 } from './trainer-dashboard-types';
+import { captureAppError } from './sentry';
 
 export type TrainerDashboardDbErrorKind = 'network' | 'auth' | 'unknown';
 
@@ -37,6 +38,7 @@ function recordTrainerDashboardDbError(source: string, err: unknown) {
     at: new Date().toISOString(),
   };
   console.error(`[trainer-dashboard-db] ${source} failed:`, err);
+  captureAppError(`trainer-dashboard-db.${source}`, err);
 }
 
 export function getTrainerDashboardDbLastError() {

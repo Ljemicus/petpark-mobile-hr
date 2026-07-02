@@ -10,6 +10,7 @@ import type {
   Message,
   ConversationSummary,
 } from './sitter-dashboard-types';
+import { captureAppError } from './sentry';
 
 export type SitterDashboardErrorKind = 'network' | 'auth' | 'unknown';
 
@@ -38,6 +39,7 @@ function recordSitterDashboardError(source: string, err: unknown) {
     at: new Date().toISOString(),
   };
   console.error(`[sitter-dashboard-db] ${source} failed:`, err);
+  captureAppError(`sitter-dashboard-db.${source}`, err);
 }
 
 export function getSitterDashboardLastError() {

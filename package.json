@@ -11,6 +11,7 @@
   "dependencies": {
     "@expo/metro-runtime": "~55.0.11",
     "@expo/vector-icons": "^15.0.2",
+    "@sentry/react-native": "~7.11.0",
     "@supabase/supabase-js": "^2.100.1",
     "base64-arraybuffer": "^1.0.2",
     "expo": "~55.0.27",

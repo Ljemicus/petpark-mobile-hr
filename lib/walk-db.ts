@@ -3,6 +3,7 @@
 
 import { supabase } from './supabase';
 import type { Walk, WalkWithDetails } from './walk-types';
+import { captureAppError } from './sentry';
 import type { Json } from './database.types';
 
 export type WalkDbErrorKind = 'network' | 'auth' | 'unknown';
@@ -32,6 +33,7 @@ function recordWalkDbError(source: string, err: unknown) {
     at: new Date().toISOString(),
   };
   console.error(`[walk-db] ${source} failed:`, err);
+  captureAppError(`walk-db.${source}`, err);
 }
 
 export function getWalkDbLastError() {

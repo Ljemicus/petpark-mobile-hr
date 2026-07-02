@@ -5,10 +5,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '../lib/auth-context';
 import { ShopCartProvider } from '../lib/shop-context';
 import { Colors } from '../lib/colors';
+import { withSentry } from '../lib/sentry';
 import OnboardingGate from '../components/OnboardingGate';
 import PetParkLogo from '../components/PetParkLogo';
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -69,3 +70,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default withSentry(RootLayout);

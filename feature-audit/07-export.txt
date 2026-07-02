@@ -1,9 +1,11 @@
 env: load .env
 env: export EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_SUPABASE_URL
+[33m› [1m[@sentry/react-native/expo][22m Missing config for [1morganization, project[22m. Environment variables will be used as a fallback during the build. https://docs.sentry.io/platforms/react-native/manual-setup/[0m
 Starting Metro Bundler
 
 iOS node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-iOS Bundled 2510ms node_modules/expo-router/entry.js (1700 modules)
+iOS node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (2096/2096)
+iOS Bundled 3709ms node_modules/expo-router/entry.js (2096 modules)
 
 › Assets (46):
 assets/brand/petpark-logo-720.png (59KB)
@@ -43,7 +45,7 @@ node_modules/expo-router/assets/sitemap.png (465B)
 node_modules/expo-router/assets/unmatched.png (4.8KB)
 
 › ios bundles (1):
-_expo/static/js/ios/entry-711365e6ea287d7a0de2ebeca8029d27.hbc (5.8MB)
+_expo/static/js/ios/entry-abe33a781d2029844736d57793003084.hbc (7.4MB)
 
 › Files (1):
 metadata.json (3KB)

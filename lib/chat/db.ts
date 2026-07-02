@@ -7,6 +7,7 @@ import {
   markMessagesAsRead as markOwnerMessagesAsRead,
   getOwnerDashboardLastError,
 } from '../owner-dashboard-db';
+import { captureAppError } from '../sentry';
 
 export type ChatDbErrorKind = 'network' | 'auth' | 'unknown';
 
@@ -35,6 +36,7 @@ function recordChatDbError(source: string, err: unknown) {
     at: new Date().toISOString(),
   };
   console.error(`[chat-db] ${source} failed:`, err);
+  captureAppError(`chat-db.${source}`, err);
 }
 
 export function getChatDbLastError() {

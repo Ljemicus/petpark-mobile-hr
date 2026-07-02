@@ -11,6 +11,7 @@ import type {
   PortfolioImage,
   MonthlyEarnings,
 } from './groomer-dashboard-types';
+import { captureAppError } from './sentry';
 
 export type GroomerDashboardDbErrorKind = 'network' | 'auth' | 'unknown';
 
@@ -39,6 +40,7 @@ function recordGroomerDashboardDbError(source: string, err: unknown) {
     at: new Date().toISOString(),
   };
   console.error(`[groomer-dashboard-db] ${source} failed:`, err);
+  captureAppError(`groomer-dashboard-db.${source}`, err);
 }
 
 export function getGroomerDashboardDbLastError() {
