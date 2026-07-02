@@ -6,7 +6,6 @@ app/booking/[sitterId].tsx
 app/pet-passport/[id].tsx
 app/admin/verification.tsx
 app/register.tsx
-app/topic/[id].tsx
 app/dashboard/owner/bookings.tsx
 app/dashboard/owner/pets.tsx
 app/dashboard/owner/messages.tsx

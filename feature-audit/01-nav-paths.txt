@@ -14,7 +14,6 @@
 /dashboard/groomer/portfolio
 /dashboard/groomer/profile
 /dashboard/groomer/reviews
-/dashboard/owner
 /dashboard/owner/bookings
 /dashboard/owner/messages
 /dashboard/owner/pets
@@ -24,7 +23,6 @@
 /dashboard/sitter/bookings
 /dashboard/sitter/earnings
 /dashboard/sitter/messages
-/dashboard/sitter/settings
 /dashboard/trainer/availability
 /dashboard/trainer/bookings
 /dashboard/trainer/earnings
@@ -33,12 +31,10 @@
 /lost-pets
 /messages
 /onboarding
-/payments/history
 /payments/wallet
 /pet-passport
 /privacy
 /register
-/shop
 /shop/basket
 /terms
 /walk

@@ -1,3 +1,5 @@
-import ShopHomeScreen from '../../components/shop/ShopHomeScreen';
+import DisabledModule from '../../components/shared/DisabledModule';
 
-export default ShopHomeScreen;
+export default function ShopScreen() {
+  return <DisabledModule title="Shop uskoro" icon="bag-outline" />;
+}

@@ -2,8 +2,21 @@
 // Uses backend API endpoints (same as web) for security
 
 import Constants from 'expo-constants';
+import { PAYMENTS_ENABLED, PAYMENT_DISABLED_MESSAGE } from './config';
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || 'https://petpark.hr';
+
+function assertPaymentsEnabled() {
+  // TODO(petpark): aktivira se posebnim kitom.
+  if (!PAYMENTS_ENABLED) {
+    throw new Error(PAYMENT_DISABLED_MESSAGE);
+  }
+}
+
+function arePaymentsEnabled() {
+  // TODO(petpark): aktivira se posebnim kitom.
+  return PAYMENTS_ENABLED;
+}
 
 export interface CreateCheckoutResult {
   url: string;
@@ -21,6 +34,7 @@ export async function createCheckoutSession(
   bookingId: string,
   authToken: string
 ): Promise<CreateCheckoutResult | null> {
+  assertPaymentsEnabled();
   try {
     const response = await fetch(`${API_URL}/api/payments/create-checkout`, {
       method: 'POST',
@@ -49,6 +63,7 @@ export async function createPaymentIntent(
   bookingId: string,
   authToken: string
 ): Promise<PaymentIntentResult | null> {
+  assertPaymentsEnabled();
   try {
     const response = await fetch(`${API_URL}/api/payments/create-intent`, {
       method: 'POST',
@@ -76,6 +91,7 @@ export async function createPaymentIntent(
 export async function createConnectAccount(
   authToken: string
 ): Promise<{ accountId: string; onboardingUrl: string } | null> {
+  assertPaymentsEnabled();
   try {
     const response = await fetch(`${API_URL}/api/payments/connect`, {
       method: 'POST',
@@ -105,6 +121,7 @@ export async function getAccountStatus(
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
 } | null> {
+  if (!arePaymentsEnabled()) return null;
   try {
     const response = await fetch(`${API_URL}/api/payments/account-status`, {
       headers: {
@@ -121,6 +138,7 @@ export async function getAccountStatus(
 }
 
 export async function createDashboardLink(authToken: string): Promise<string | null> {
+  if (!arePaymentsEnabled()) return null;
   try {
     const response = await fetch(`${API_URL}/api/payments/dashboard-link`, {
       headers: {
@@ -144,6 +162,7 @@ export async function requestRefund(
   reason: string,
   authToken: string
 ): Promise<{ success: boolean; refundId?: string }> {
+  assertPaymentsEnabled();
   try {
     const response = await fetch(`${API_URL}/api/payments/refund`, {
       method: 'POST',

@@ -7,7 +7,6 @@ Form files and whether they reference a submit + validation:
   app/pet-passport/[id].tsx  submit:0 validation:0
   app/admin/verification.tsx  submit:0 validation:0
   app/register.tsx  submit:0 validation:0
-  app/topic/[id].tsx  submit:0 validation:0
   app/dashboard/owner/bookings.tsx  submit:7 validation:0
   app/dashboard/owner/pets.tsx  submit:0 validation:0
   app/dashboard/owner/messages.tsx  submit:0 validation:0
