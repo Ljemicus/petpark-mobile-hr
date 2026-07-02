@@ -18,12 +18,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { Pet, Booking } from '../../../lib/owner-dashboard-types';
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS, SPECIES_LABELS } from '../../../lib/owner-dashboard-types';
 import {
   getPetsByOwner,
   getOwnerBookings,
   getUnreadMessagesCount,
+  getOwnerDashboardLastError,
+  clearOwnerDashboardLastError,
 } from '../../../lib/owner-dashboard-db';
 
 const { width } = Dimensions.get('window');
@@ -212,6 +215,7 @@ export default function OwnerDashboardScreen() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const userId = session?.user?.id;
   const userName = user?.name?.split(' ')[0] || 'Korisnik';
@@ -221,6 +225,8 @@ export default function OwnerDashboardScreen() {
     if (!userId) return;
 
     try {
+      clearOwnerDashboardLastError();
+      setLoadError(null);
       const [petsData, bookingsData, unreadData] = await Promise.all([
         getPetsByOwner(userId),
         getOwnerBookings(userId),
@@ -230,8 +236,11 @@ export default function OwnerDashboardScreen() {
       setPets(petsData);
       setBookings(bookingsData);
       setUnreadCount(unreadData);
+      const ownerError = getOwnerDashboardLastError();
+      if (ownerError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -288,6 +297,8 @@ export default function OwnerDashboardScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {loadError ? <InlineErrorState message={loadError} onRetry={fetchData} /> : null}
 
         {/* Stats */}
         <View style={styles.statsContainer}>

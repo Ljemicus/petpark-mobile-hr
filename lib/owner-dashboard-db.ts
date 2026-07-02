@@ -3,6 +3,43 @@
 import { supabase } from './supabase';
 import type { Pet, Booking, Message, ConversationSummary } from './owner-dashboard-types';
 
+export type OwnerDashboardErrorKind = 'network' | 'auth' | 'unknown';
+
+type OwnerDashboardLastError = {
+  kind: OwnerDashboardErrorKind;
+  message: string;
+  source: string;
+  at: string;
+};
+
+let ownerDashboardLastError: OwnerDashboardLastError | null = null;
+
+function classifyOwnerDashboardError(err: unknown): OwnerDashboardErrorKind {
+  const message = err instanceof Error ? err.message.toLowerCase() : String(err ?? '').toLowerCase();
+  if (message.includes('jwt') || message.includes('auth') || message.includes('permission') || message.includes('rls')) return 'auth';
+  if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) return 'network';
+  return 'unknown';
+}
+
+function recordOwnerDashboardError(source: string, err: unknown) {
+  const message = err instanceof Error ? err.message : 'Nepoznata greška';
+  ownerDashboardLastError = {
+    kind: classifyOwnerDashboardError(err),
+    message,
+    source,
+    at: new Date().toISOString(),
+  };
+  console.error(`[owner-dashboard-db] ${source} failed:`, err);
+}
+
+export function getOwnerDashboardLastError() {
+  return ownerDashboardLastError;
+}
+
+export function clearOwnerDashboardLastError() {
+  ownerDashboardLastError = null;
+}
+
 function toPet(row: any): Pet {
   return {
     id: row.id,
@@ -105,7 +142,7 @@ export async function getPetsByOwner(ownerId: string): Promise<Pet[]> {
     if (error) throw error;
     return (data || []).map(toPet);
   } catch (err) {
-    console.error('getPetsByOwner error:', err);
+    recordOwnerDashboardError('getPetsByOwner', err);
     return [];
   }
 }
@@ -127,7 +164,7 @@ export async function createPet(petData: Omit<Pet, 'id' | 'created_at'>): Promis
     if (error || !data) throw error;
     return toPet(data);
   } catch (err) {
-    console.error('createPet error:', err);
+    recordOwnerDashboardError('createPet', err);
     return null;
   }
 }
@@ -149,7 +186,7 @@ export async function updatePet(petId: string, updates: Partial<Pet>): Promise<P
     if (error || !data) throw error;
     return toPet(data);
   } catch (err) {
-    console.error('updatePet error:', err);
+    recordOwnerDashboardError('updatePet', err);
     return null;
   }
 }
@@ -160,7 +197,7 @@ export async function deletePet(petId: string): Promise<boolean> {
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('deletePet error:', err);
+    recordOwnerDashboardError('deletePet', err);
     return false;
   }
 }
@@ -180,7 +217,7 @@ export async function getOwnerBookings(ownerId: string): Promise<Booking[]> {
     if (error) throw error;
     return (data || []).map(toBooking);
   } catch (err) {
-    console.error('getOwnerBookings error:', err);
+    recordOwnerDashboardError('getOwnerBookings', err);
     return [];
   }
 }
@@ -191,7 +228,7 @@ export async function cancelBooking(bookingId: string): Promise<boolean> {
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('cancelBooking error:', err);
+    recordOwnerDashboardError('cancelBooking', err);
     return false;
   }
 }
@@ -205,7 +242,7 @@ export async function getReviewedBookingIds(ownerId: string): Promise<string[]> 
     if (error) throw error;
     return (data || []).map((review) => review.booking_id);
   } catch (err) {
-    console.error('getReviewedBookingIds error:', err);
+    recordOwnerDashboardError('getReviewedBookingIds', err);
     return [];
   }
 }
@@ -235,7 +272,7 @@ export async function createReview(reviewData: {
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('createReview error:', err);
+    recordOwnerDashboardError('createReview', err);
     return false;
   }
 }
@@ -286,7 +323,7 @@ export async function getConversationSummaries(userId: string): Promise<Conversa
       };
     });
   } catch (err) {
-    console.error('getConversationSummaries error:', err);
+    recordOwnerDashboardError('getConversationSummaries', err);
     return [];
   }
 }
@@ -304,7 +341,7 @@ export async function getMessagesForConversation(userId: string, partnerId: stri
     if (error) throw error;
     return ((data || []) as RemoteMessage[]).map((row) => toMessage(row, userId, partnerId));
   } catch (err) {
-    console.error('getMessagesForConversation error:', err);
+    recordOwnerDashboardError('getMessagesForConversation', err);
     return [];
   }
 }
@@ -331,7 +368,7 @@ export async function sendMessage(messageData: Omit<Message, 'id' | 'created_at'
     await supabase.from('conversations').update({ last_message_at: data.created_at }).eq('id', conversationId);
     return toMessage(data as RemoteMessage, messageData.sender_id, messageData.receiver_id, messageData.booking_id);
   } catch (err) {
-    console.error('sendMessage error:', err);
+    recordOwnerDashboardError('sendMessage', err);
     return null;
   }
 }
@@ -346,7 +383,7 @@ export async function markMessagesAsRead(userId: string, partnerId: string): Pro
       .eq('conversation_id', conversationId)
       .eq('profile_id', userId);
   } catch (err) {
-    console.error('markMessagesAsRead error:', err);
+    recordOwnerDashboardError('markMessagesAsRead', err);
   }
 }
 

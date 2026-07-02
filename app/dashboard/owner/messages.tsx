@@ -19,12 +19,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { ConversationSummary, Message } from '../../../lib/owner-dashboard-types';
 import {
   getConversationSummaries,
   getMessagesForConversation,
   sendMessage,
   markMessagesAsRead,
+  getOwnerDashboardLastError,
+  clearOwnerDashboardLastError,
 } from '../../../lib/owner-dashboard-db';
 
 // Conversation List Item
@@ -133,6 +136,7 @@ export default function MessagesScreen() {
   const [newMessage, setNewMessage] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   const userId = session?.user?.id;
@@ -142,10 +146,15 @@ export default function MessagesScreen() {
   const fetchConversations = useCallback(async () => {
     if (!userId) return;
     try {
+      clearOwnerDashboardLastError();
+      setLoadError(null);
       const data = await getConversationSummaries(userId);
       setConversations(data);
+      const ownerError = getOwnerDashboardLastError();
+      if (ownerError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching conversations:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -175,8 +184,12 @@ export default function MessagesScreen() {
   const openConversation = async (conversation: ConversationSummary) => {
     setActiveConversation(conversation);
     if (userId) {
+      clearOwnerDashboardLastError();
+      setLoadError(null);
       const msgs = await getMessagesForConversation(userId, conversation.partnerId);
       setMessages(msgs);
+      const ownerError = getOwnerDashboardLastError();
+      if (ownerError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
       // Označi kao pročitano
       await markMessagesAsRead(userId, conversation.partnerId);
       // Osvježi listu razgovora
@@ -235,7 +248,7 @@ export default function MessagesScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={styles.conversationsList}
           ListEmptyComponent={
-            <View style={styles.emptyState}>
+            loadError ? <InlineErrorState message={loadError} onRetry={fetchConversations} /> : <View style={styles.emptyState}>
               <View style={styles.emptyStateIcon}>
                 <Ionicons name="chatbubbles-outline" size={60} color={Colors.muted} />
               </View>
@@ -285,6 +298,8 @@ export default function MessagesScreen() {
             <Text style={styles.chatHeaderStatus}>Online</Text>
           </View>
         </View>
+
+        {loadError ? <InlineErrorState message={loadError} onRetry={() => openConversation(activeConversation)} /> : null}
 
         {/* Messages List */}
         <FlatList

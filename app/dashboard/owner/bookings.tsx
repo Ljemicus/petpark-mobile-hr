@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { Booking, BookingStatus } from '../../../lib/owner-dashboard-types';
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../../../lib/owner-dashboard-types';
 import {
@@ -26,6 +27,8 @@ import {
   cancelBooking,
   getReviewedBookingIds,
   createReview,
+  getOwnerDashboardLastError,
+  clearOwnerDashboardLastError,
 } from '../../../lib/owner-dashboard-db';
 
 // Booking Card komponenta
@@ -241,6 +244,7 @@ export default function BookingsScreen() {
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -250,14 +254,19 @@ export default function BookingsScreen() {
   const fetchData = useCallback(async () => {
     if (!userId) return;
     try {
+      clearOwnerDashboardLastError();
+      setLoadError(null);
       const [bookingsData, reviewedData] = await Promise.all([
         getOwnerBookings(userId),
         getReviewedBookingIds(userId),
       ]);
       setBookings(bookingsData);
       setReviewedIds(reviewedData);
+      const ownerError = getOwnerDashboardLastError();
+      if (ownerError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching bookings:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -398,6 +407,7 @@ export default function BookingsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {loadError ? <InlineErrorState message={loadError} onRetry={fetchData} /> : null}
         {filteredBookings.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyStateIcon}>

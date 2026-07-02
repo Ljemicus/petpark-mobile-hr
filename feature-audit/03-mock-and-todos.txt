@@ -79,32 +79,32 @@ app/register.tsx:84:              placeholderTextColor={Colors.muted}
 app/register.tsx:96:              placeholder="Minimalno 8 znakova"
 app/register.tsx:97:              placeholderTextColor={Colors.muted}
 app/topic/[id].tsx:8:      <DisabledModule title="Forum uskoro" icon="chatbubbles-outline" />
-app/dashboard/owner/index.tsx:112:              styles.petPlaceholder,
-app/dashboard/owner/index.tsx:176:            <View style={styles.sitterAvatarPlaceholder}>
-app/dashboard/owner/index.tsx:610:  petPlaceholder: {
-app/dashboard/owner/index.tsx:689:  sitterAvatarPlaceholder: {
-app/dashboard/owner/bookings.tsx:70:            <View style={styles.sitterAvatarPlaceholder}>
-app/dashboard/owner/bookings.tsx:220:            placeholder="Kako je protekla usluga?"
-app/dashboard/owner/bookings.tsx:221:            placeholderTextColor={Colors.muted}
-app/dashboard/owner/bookings.tsx:522:  sitterAvatarPlaceholder: {
-app/dashboard/owner/pets.tsx:77:              styles.petPlaceholder,
-app/dashboard/owner/pets.tsx:203:              placeholder="Unesite ime ljubimca"
-app/dashboard/owner/pets.tsx:204:              placeholderTextColor={Colors.muted}
-app/dashboard/owner/pets.tsx:240:              placeholder="npr. Zlatni retriver"
-app/dashboard/owner/pets.tsx:241:              placeholderTextColor={Colors.muted}
-app/dashboard/owner/pets.tsx:252:                  placeholder="2"
-app/dashboard/owner/pets.tsx:253:                  placeholderTextColor={Colors.muted}
-app/dashboard/owner/pets.tsx:263:                  placeholder="15"
-app/dashboard/owner/pets.tsx:264:                  placeholderTextColor={Colors.muted}
-app/dashboard/owner/pets.tsx:274:              placeholder="Npr. alergije, lijekovi, specijalna dijeta..."
-app/dashboard/owner/pets.tsx:275:              placeholderTextColor={Colors.muted}
-app/dashboard/owner/pets.tsx:511:  petPlaceholder: {
-app/dashboard/owner/messages.tsx:61:        <View style={styles.conversationAvatarPlaceholder}>
-app/dashboard/owner/messages.tsx:276:            <View style={styles.chatHeaderAvatarPlaceholder}>
-app/dashboard/owner/messages.tsx:310:            placeholder="Napišite poruku..."
-app/dashboard/owner/messages.tsx:311:            placeholderTextColor={Colors.muted}
-app/dashboard/owner/messages.tsx:369:  conversationAvatarPlaceholder: {
-app/dashboard/owner/messages.tsx:475:  chatHeaderAvatarPlaceholder: {
+app/dashboard/owner/index.tsx:115:              styles.petPlaceholder,
+app/dashboard/owner/index.tsx:179:            <View style={styles.sitterAvatarPlaceholder}>
+app/dashboard/owner/index.tsx:621:  petPlaceholder: {
+app/dashboard/owner/index.tsx:700:  sitterAvatarPlaceholder: {
+app/dashboard/owner/bookings.tsx:73:            <View style={styles.sitterAvatarPlaceholder}>
+app/dashboard/owner/bookings.tsx:223:            placeholder="Kako je protekla usluga?"
+app/dashboard/owner/bookings.tsx:224:            placeholderTextColor={Colors.muted}
+app/dashboard/owner/bookings.tsx:532:  sitterAvatarPlaceholder: {
+app/dashboard/owner/pets.tsx:80:              styles.petPlaceholder,
+app/dashboard/owner/pets.tsx:206:              placeholder="Unesite ime ljubimca"
+app/dashboard/owner/pets.tsx:207:              placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:243:              placeholder="npr. Zlatni retriver"
+app/dashboard/owner/pets.tsx:244:              placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:255:                  placeholder="2"
+app/dashboard/owner/pets.tsx:256:                  placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:266:                  placeholder="15"
+app/dashboard/owner/pets.tsx:267:                  placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:277:              placeholder="Npr. alergije, lijekovi, specijalna dijeta..."
+app/dashboard/owner/pets.tsx:278:              placeholderTextColor={Colors.muted}
+app/dashboard/owner/pets.tsx:522:  petPlaceholder: {
+app/dashboard/owner/messages.tsx:64:        <View style={styles.conversationAvatarPlaceholder}>
+app/dashboard/owner/messages.tsx:289:            <View style={styles.chatHeaderAvatarPlaceholder}>
+app/dashboard/owner/messages.tsx:325:            placeholder="Napišite poruku..."
+app/dashboard/owner/messages.tsx:326:            placeholderTextColor={Colors.muted}
+app/dashboard/owner/messages.tsx:384:  conversationAvatarPlaceholder: {
+app/dashboard/owner/messages.tsx:490:  chatHeaderAvatarPlaceholder: {
 app/dashboard/groomer/index.tsx:109:            <View style={styles.clientAvatarPlaceholder}>
 app/dashboard/groomer/index.tsx:457:                    <View style={styles.reviewAvatarPlaceholder}>
 app/dashboard/groomer/index.tsx:736:  clientAvatarPlaceholder: {

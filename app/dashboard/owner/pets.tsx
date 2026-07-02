@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
 import { useAuth } from '../../../lib/auth-context';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import type { Pet, Species } from '../../../lib/owner-dashboard-types';
 import { SPECIES_LABELS } from '../../../lib/owner-dashboard-types';
 import {
@@ -26,6 +27,8 @@ import {
   createPet,
   updatePet,
   deletePet,
+  getOwnerDashboardLastError,
+  clearOwnerDashboardLastError,
 } from '../../../lib/owner-dashboard-db';
 
 const SPECIES_OPTIONS: { value: Species; icon: string; color: string }[] = [
@@ -297,6 +300,7 @@ export default function PetsScreen() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
 
@@ -319,10 +323,15 @@ export default function PetsScreen() {
   const fetchPets = useCallback(async () => {
     if (!userId) return;
     try {
+      clearOwnerDashboardLastError();
+      setLoadError(null);
       const data = await getPetsByOwner(userId);
       setPets(data);
+      const ownerError = getOwnerDashboardLastError();
+      if (ownerError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error fetching pets:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -415,6 +424,8 @@ export default function PetsScreen() {
             <Ionicons name="add" size={24} color="#FFF" />
           </TouchableOpacity>
         </View>
+
+        {loadError ? <InlineErrorState message={loadError} onRetry={fetchPets} /> : null}
 
         {/* Pets List */}
         {pets.length === 0 ? (
