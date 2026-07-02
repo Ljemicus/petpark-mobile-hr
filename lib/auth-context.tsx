@@ -29,7 +29,7 @@ interface AuthContextType {
     role: 'vlasnik' | 'sitter';
     city: string;
     onboarding?: OnboardingData;
-  }) => Promise<void>;
+  }) => Promise<{ success: boolean; error?: string }>;
   skipOnboarding: () => void;
   logout: () => Promise<void>;
   isLoggedIn: boolean;
@@ -42,7 +42,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   login: async () => ({ success: false }),
   register: async () => ({ success: false }),
-  completeOnboarding: async () => {},
+  completeOnboarding: async () => ({ success: false, error: 'Onboarding nije spreman.' }),
   skipOnboarding: () => {},
   logout: async () => {},
   isLoggedIn: false,
@@ -124,67 +124,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: 'vlasnik' | 'sitter';
     city: string;
     onboarding?: OnboardingData;
-  }) => {
+  }): Promise<{ success: boolean; error?: string }> => {
     const onboarding = data.onboarding ?? {};
     const avatar = onboarding.avatarUrl ?? (data.role === 'sitter' ? '🤝' : '🐾');
 
-    try {
-      if (session?.user?.id) {
-        const userId = session.user.id;
-
-        await supabase.auth.updateUser({
-          data: {
-            full_name: data.fullName,
-            role: data.role,
-            city: data.city,
-            onboarding,
-            onboarding_completed: true,
-            avatar,
-            avatar_url: onboarding.avatarUrl ?? null,
-            verification_status: onboarding.verificationStatus ?? 'none',
-          },
-        });
-
-        await supabase
-          .from('profiles')
-          .upsert({
-            id: userId,
-            email: session.user.email ?? '',
-            display_name: data.fullName,
-            city: data.city,
-            avatar_url: onboarding.avatarUrl ?? null,
-            onboarding_state: 'completed',
-          }, { onConflict: 'id' });
-
-        if (data.role === 'sitter') {
-          await supabase
-            .from('providers')
-            .upsert({
-              profile_id: userId,
-              provider_kind: 'sitter',
-              display_name: data.fullName,
-              city: data.city,
-              bio: onboarding.experience ?? '',
-              public_status: 'draft',
-              verified_status: onboarding.verificationStatus ?? 'none',
-            }, { onConflict: 'profile_id,provider_kind' });
-        }
-
-        setNeedsOnboarding(false);
-      }
-    } catch (err: any) {
-      console.warn('completeOnboarding: Supabase save failed, using local state only:', err?.message);
+    if (!session?.user?.id) {
+      return { success: false, error: 'Nema aktivne sesije. Prijavi se pa pokušaj ponovno.' };
     }
 
-    setUser((prev) => ({
-      id: prev?.id ?? session?.user?.id ?? 'new',
-      name: data.fullName,
-      email: prev?.email ?? session?.user?.email ?? '',
-      avatar,
-      role: data.role,
-      city: data.city,
-    }));
-    setNeedsOnboarding(false);
+    try {
+      const userId = session.user.id;
+
+      const { error: userError } = await supabase.auth.updateUser({
+        data: {
+          full_name: data.fullName,
+          role: data.role,
+          city: data.city,
+          onboarding,
+          onboarding_completed: true,
+          avatar,
+          avatar_url: onboarding.avatarUrl ?? null,
+          verification_status: onboarding.verificationStatus ?? 'none',
+        },
+      });
+      if (userError) throw userError;
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: userId,
+          email: session.user.email ?? '',
+          display_name: data.fullName,
+          city: data.city,
+          avatar_url: onboarding.avatarUrl ?? null,
+          onboarding_state: 'completed',
+        }, { onConflict: 'id' });
+      if (profileError) throw profileError;
+
+      if (data.role === 'sitter') {
+        const { error: providerError } = await supabase
+          .from('providers')
+          .upsert({
+            profile_id: userId,
+            provider_kind: 'sitter',
+            display_name: data.fullName,
+            city: data.city,
+            bio: onboarding.experience ?? '',
+            public_status: 'draft',
+            verified_status: onboarding.verificationStatus ?? 'none',
+          }, { onConflict: 'profile_id,provider_kind' });
+        if (providerError) throw providerError;
+      }
+
+      setUser((prev) => ({
+        id: prev?.id ?? userId,
+        name: data.fullName,
+        email: prev?.email ?? session.user.email ?? '',
+        avatar,
+        role: data.role,
+        city: data.city,
+      }));
+      setNeedsOnboarding(false);
+
+      return { success: true };
+    } catch (err: any) {
+      const message = err?.message ?? 'Onboarding nije spremljen. Provjeri internet vezu i pokušaj ponovno.';
+      console.warn('completeOnboarding: Supabase save failed:', message);
+      return { success: false, error: message };
+    }
   };
 
   const skipOnboarding = () => {

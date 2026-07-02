@@ -13,8 +13,8 @@ lib/auth-context.tsx:73:supabase.auth.
 lib/auth-context.tsx:88:supabase.auth.
 lib/auth-context.tsx:100:supabase.auth.
 lib/auth-context.tsx:110:supabase.auth.
-lib/auth-context.tsx:135:supabase.auth.
-lib/auth-context.tsx:196:supabase.auth.
+lib/auth-context.tsx:138:supabase.auth.
+lib/auth-context.tsx:203:supabase.auth.
 lib/sitter-dashboard-db.ts:76:supabase.from('conversation_participants')
 lib/sitter-dashboard-db.ts:215:supabase.from('bookings')
 lib/sitter-dashboard-db.ts:271:supabase.from('availability_slots')

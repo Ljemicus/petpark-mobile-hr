@@ -120,8 +120,8 @@ app/dashboard/trainer/index.tsx:406:router.push(`/dashboard/trainer/programs?edi
 app/dashboard/trainer/index.tsx:417:router.push('/messages'
 app/notifications.tsx:52:router.push({ pathname: '/booking-requests/[id]', params: { id, role } } as any
 app/notifications.tsx:61:router.push('/login'
-app/onboarding.tsx:287:router.replace(form.role === 'vlasnik' ? '/(tabs
-app/onboarding.tsx:646:router.replace('/(tabs
+app/onboarding.tsx:293:router.replace(form.role === 'vlasnik' ? '/(tabs
+app/onboarding.tsx:652:router.replace('/(tabs
 app/sitter/[id].tsx:29:router.push('/login'
 app/sitter/[id].tsx:32:router.push({
 app/booking-requests/[id].tsx:63:router.push('/login'

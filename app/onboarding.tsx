@@ -257,7 +257,7 @@ export default function OnboardingScreen() {
         verificationDocuments = uploadedDocs.filter((url): url is string => url !== null);
       }
 
-      await completeOnboarding({
+      const result = await completeOnboarding({
         fullName: form.fullName,
         role: form.role,
         city: form.city,
@@ -277,6 +277,12 @@ export default function OnboardingScreen() {
           verificationDocuments,
         },
       });
+
+      if (!result.success) {
+        Alert.alert('Onboarding nije spremljen', result.error ?? 'Provjeri internet vezu i pokušaj ponovno.');
+        return;
+      }
+
       Alert.alert(
         'Spremno',
         form.role === 'vlasnik'
@@ -286,7 +292,7 @@ export default function OnboardingScreen() {
 
       router.replace(form.role === 'vlasnik' ? '/(tabs)/search' : '/(tabs)/profile');
     } catch (error) {
-      Alert.alert('Nešto nije uspjelo', 'Spremio sam što mogu lokalno, ali provjeri internet vezu i pokušaj ponovo.');
+      Alert.alert('Nešto nije uspjelo', 'Onboarding nije spremljen. Provjeri internet vezu i pokušaj ponovno.');
     } finally {
       setLoading(false);
     }
