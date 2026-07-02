@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
 import { useAuth } from '../../lib/auth-context';
+import InlineErrorState from '../../components/shared/InlineErrorState';
 import type {
   ServiceType,
   BookingStep,
@@ -35,6 +36,8 @@ import {
   getOwnerPets,
   checkSitterAvailability,
   createBooking,
+  getBookingDbLastError,
+  clearBookingDbLastError,
 } from '../../lib/booking-db';
 
 // Step indicator komponenta
@@ -581,6 +584,7 @@ export default function BookingScreen() {
   const [sitter, setSitter] = useState<SitterInfo | null>(null);
   const [sitterPrices, setSitterPrices] = useState<Record<ServiceType, number> | null>(null);
   const [pets, setPets] = useState<PetInfo[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Form state
   const [selectedService, setSelectedService] = useState<ServiceType | null>(null);
@@ -607,6 +611,8 @@ export default function BookingScreen() {
   const loadData = async () => {
     try {
       setLoading(true);
+      clearBookingDbLastError();
+      setLoadError(null);
       const [sitterData, pricesData, petsData] = await Promise.all([
         getSitterForBooking(sitterId!),
         getSitterPrices(sitterId!),
@@ -616,8 +622,11 @@ export default function BookingScreen() {
       setSitter(sitterData);
       setSitterPrices(pricesData);
       setPets(petsData);
+      const bookingError = getBookingDbLastError();
+      if (bookingError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error loading booking data:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
       Alert.alert('Greška', 'Došlo je do greške pri učitavanju podataka');
     } finally {
       setLoading(false);
@@ -767,6 +776,8 @@ export default function BookingScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {loadError ? <InlineErrorState message={loadError} onRetry={loadData} /> : null}
+
           {currentStep === 1 && (
             <ServiceSelection
               selectedService={selectedService}

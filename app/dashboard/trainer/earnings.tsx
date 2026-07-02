@@ -16,11 +16,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { TrainerBooking, MonthlyEarnings } from '../../../lib/trainer-dashboard-types';
 import {
   getTrainerEarnings,
   getTrainerBookings,
+  getTrainerDashboardDbLastError,
+  clearTrainerDashboardDbLastError,
 } from '../../../lib/trainer-dashboard-db';
 
 const { width } = Dimensions.get('window');
@@ -142,6 +145,7 @@ export default function TrainerEarningsScreen() {
     if (!userId) return;
 
     try {
+      clearTrainerDashboardDbLastError();
       const earningsData = await getTrainerEarnings(userId);
       setTotalEarnings(earningsData.totalEarnings);
       setThisMonthEarnings(earningsData.thisMonthEarnings);
@@ -166,6 +170,8 @@ export default function TrainerEarningsScreen() {
     setRefreshing(false);
   }, [fetchData]);
 
+  const dashboardError = getTrainerDashboardDbLastError();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -181,6 +187,8 @@ export default function TrainerEarningsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
+        {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchData} /> : null}
+
         {/* Total Earnings Card */}
         <View style={styles.totalEarningsCard}>
           <Text style={styles.totalEarningsLabel}>Ukupna zarada</Text>

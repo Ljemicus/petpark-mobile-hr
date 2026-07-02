@@ -1,14 +1,14 @@
 app/walk/active.tsx:19:import * as Location from 'expo-location';
-app/walk/active.tsx:295:              {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
-app/walk/active.tsx:325:  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
-app/walk/active.tsx:335:      const { status } = await Location.requestForegroundPermissionsAsync();
-app/walk/active.tsx:339:        const location = await Location.getCurrentPositionAsync({
-app/walk/active.tsx:340:          accuracy: Location.Accuracy.High,
-app/walk/active.tsx:434:      locationSubscriptionRef.current = await Location.watchPositionAsync(
-app/walk/active.tsx:436:          accuracy: Location.Accuracy.BestForNavigation,
-app/walk/active.tsx:454:  const handleLocationUpdate = (location: Location.LocationObject) => {
-app/walk/active.tsx:576:      lat: currentLocation.lat,
-app/walk/active.tsx:577:      lng: currentLocation.lng,
+app/walk/active.tsx:298:              {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
+app/walk/active.tsx:329:  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+app/walk/active.tsx:339:      const { status } = await Location.requestForegroundPermissionsAsync();
+app/walk/active.tsx:343:        const location = await Location.getCurrentPositionAsync({
+app/walk/active.tsx:344:          accuracy: Location.Accuracy.High,
+app/walk/active.tsx:448:      locationSubscriptionRef.current = await Location.watchPositionAsync(
+app/walk/active.tsx:450:          accuracy: Location.Accuracy.BestForNavigation,
+app/walk/active.tsx:468:  const handleLocationUpdate = (location: Location.LocationObject) => {
+app/walk/active.tsx:590:      lat: currentLocation.lat,
+app/walk/active.tsx:591:      lng: currentLocation.lng,
 app/onboarding.tsx:14:import * as ImagePicker from 'expo-image-picker';
 app/onboarding.tsx:100:    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 

@@ -15,9 +15,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../lib/colors';
+import InlineErrorState from '../../components/shared/InlineErrorState';
 import { supabase } from '../../lib/supabase';
 import { Message } from '../../lib/chat/types';
-import { getConversationMessages, sendMessage, markMessagesAsRead } from '../../lib/chat/db';
+import {
+  getConversationMessages,
+  sendMessage,
+  markMessagesAsRead,
+  getChatDbLastError,
+  clearChatDbLastError,
+} from '../../lib/chat/db';
 import { useRealtimeMessages } from '../../lib/chat/realtime';
 import { groupMessagesByDate, formatFullDate, formatMessageTime } from '../../lib/chat/utils';
 
@@ -103,6 +110,7 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [partnerAvatar, setPartnerAvatar] = useState<string | null>(partnerAvatarParam || null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Dohvati trenutnog korisnika
   useEffect(() => {
@@ -113,27 +121,32 @@ export default function ChatScreen() {
     });
   }, []);
 
+  const loadMessages = useCallback(async () => {
+    if (!userId || !partnerId) return;
+
+    setLoading(true);
+    try {
+      clearChatDbLastError();
+      setLoadError(null);
+      const msgs = await getConversationMessages(userId, partnerId);
+      setMessages(msgs);
+      const chatError = getChatDbLastError();
+      if (chatError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
+
+      // Označi kao pročitano
+      await markMessagesAsRead(userId, partnerId);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, partnerId]);
+
   // Dohvati povijest poruka
   useEffect(() => {
-    if (!userId || !partnerId) return;
-    
-    const loadMessages = async () => {
-      setLoading(true);
-      try {
-        const msgs = await getConversationMessages(userId, partnerId);
-        setMessages(msgs);
-        
-        // Označi kao pročitano
-        await markMessagesAsRead(userId, partnerId);
-      } catch (error) {
-        console.error('Error loading messages:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     loadMessages();
-  }, [userId, partnerId]);
+  }, [loadMessages]);
 
   // Realtime subscription
   useRealtimeMessages(userId, useCallback((newMessage: Message) => {
@@ -269,6 +282,7 @@ export default function ChatScreen() {
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
           ListHeaderComponent={() => (
             <>
+              {loadError ? <InlineErrorState message={loadError} onRetry={loadMessages} /> : null}
               {groupedMessages.map((group, gi) => (
                 <View key={gi}>
                   <DateHeader date={group.date} />

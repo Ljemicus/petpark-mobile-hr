@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { GroomerBooking, GroomerProfile } from '../../../lib/groomer-dashboard-types';
 import {
@@ -27,6 +28,8 @@ import {
   getGroomerProfile,
   getGroomerBookings,
   updateGroomerBookingStatus,
+  getGroomerDashboardDbLastError,
+  clearGroomerDashboardDbLastError,
 } from '../../../lib/groomer-dashboard-db';
 
 export default function GroomerBookingsScreen() {
@@ -46,6 +49,7 @@ export default function GroomerBookingsScreen() {
     if (!userId) return;
 
     try {
+      clearGroomerDashboardDbLastError();
       const profileData = await getGroomerProfile(userId);
       if (profileData) {
         setProfile(profileData);
@@ -102,6 +106,8 @@ export default function GroomerBookingsScreen() {
 
   const getStatusColor = (status: string) => STATUS_COLORS[status as keyof typeof STATUS_COLORS];
 
+  const dashboardError = getGroomerDashboardDbLastError();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -116,6 +122,8 @@ export default function GroomerBookingsScreen() {
       {/* Filter Buttons */}
       <View style={styles.filterContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+        {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchData} /> : null}
+
           {(['all', 'pending', 'confirmed', 'completed'] as const).map((filter) => (
             <TouchableOpacity
               key={filter}

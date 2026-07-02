@@ -16,10 +16,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
 import { useAuth } from '../../lib/auth-context';
+import InlineErrorState from '../../components/shared/InlineErrorState';
 import type { WalkWithDetails } from '../../lib/walk-types';
 import {
   getWalksForUser,
   getActiveWalksForSitter,
+  getWalkDbLastError,
+  clearWalkDbLastError,
 } from '../../lib/walk-db';
 import {
   formatWalkDate,
@@ -186,6 +189,7 @@ export default function WalkListScreen() {
   const [filter, setFilter] = useState<WalkFilter>('all');
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const isSitter = user?.role === 'sitter';
 
@@ -194,6 +198,8 @@ export default function WalkListScreen() {
 
     setLoading(true);
     try {
+      clearWalkDbLastError();
+      setLoadError(null);
       const [allWalks, active] = await Promise.all([
         getWalksForUser(user.id),
         isSitter ? getActiveWalksForSitter(user.id) : Promise.resolve([]),
@@ -201,8 +207,11 @@ export default function WalkListScreen() {
 
       setWalks(allWalks);
       setActiveWalks(active);
+      const walkError = getWalkDbLastError();
+      if (walkError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error loading walks:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -263,6 +272,8 @@ export default function WalkListScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {loadError ? <InlineErrorState message={loadError} onRetry={loadWalks} /> : null}
+
         {/* Aktivne šetnje (prikazane prve ako postoje) */}
         {activeWalks.length > 0 && (
           <View style={styles.activeSection}>

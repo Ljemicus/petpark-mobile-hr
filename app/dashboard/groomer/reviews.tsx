@@ -14,11 +14,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { GroomerReview, GroomerProfile } from '../../../lib/groomer-dashboard-types';
 import {
   getGroomerProfile,
   getGroomerReviews,
+  getGroomerDashboardDbLastError,
+  clearGroomerDashboardDbLastError,
 } from '../../../lib/groomer-dashboard-db';
 
 export default function GroomerReviewsScreen() {
@@ -34,6 +37,7 @@ export default function GroomerReviewsScreen() {
     if (!userId) return;
 
     try {
+      clearGroomerDashboardDbLastError();
       const profileData = await getGroomerProfile(userId);
       if (profileData) {
         setProfile(profileData);
@@ -75,6 +79,8 @@ export default function GroomerReviewsScreen() {
     });
   };
 
+  const dashboardError = getGroomerDashboardDbLastError();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -90,6 +96,8 @@ export default function GroomerReviewsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={styles.scrollContent}
       >
+        {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchData} /> : null}
+
         {/* Rating Summary Card */}
         <View style={styles.summaryCard}>
           <View style={styles.ratingContainer}>

@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { TrainerAvailabilitySlot } from '../../../lib/trainer-dashboard-types';
 import { DAY_LABELS } from '../../../lib/trainer-dashboard-types';
@@ -27,6 +28,8 @@ import {
   deleteTrainerAvailabilitySlot,
   deleteTrainerAvailabilityByDay,
   generateTrainerSlots,
+  getTrainerDashboardDbLastError,
+  clearTrainerDashboardDbLastError,
 } from '../../../lib/trainer-dashboard-db';
 
 // Time slot button
@@ -385,6 +388,7 @@ export default function TrainerAvailabilityScreen() {
     if (!userId) return;
 
     try {
+      clearTrainerDashboardDbLastError();
       const [profileData, availabilityData] = await Promise.all([
         getTrainerProfile(userId),
         getTrainerAvailability(userId),
@@ -495,6 +499,8 @@ export default function TrainerAvailabilityScreen() {
     }
   };
 
+  const dashboardError = getTrainerDashboardDbLastError();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -536,6 +542,8 @@ export default function TrainerAvailabilityScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchData} /> : null}
+
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.primary} />

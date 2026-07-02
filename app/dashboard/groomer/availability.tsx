@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { GroomerAvailabilitySlot, GroomerProfile } from '../../../lib/groomer-dashboard-types';
 import {
@@ -22,6 +23,8 @@ import {
   getGroomerAvailability,
   generateDefaultSlots,
   deleteAvailabilitySlot,
+  getGroomerDashboardDbLastError,
+  clearGroomerDashboardDbLastError,
 } from '../../../lib/groomer-dashboard-db';
 
 export default function GroomerAvailabilityScreen() {
@@ -39,6 +42,7 @@ export default function GroomerAvailabilityScreen() {
     if (!userId) return;
 
     try {
+      clearGroomerDashboardDbLastError();
       const profileData = await getGroomerProfile(userId);
       if (profileData) {
         setProfile(profileData);
@@ -137,6 +141,8 @@ export default function GroomerAvailabilityScreen() {
     });
   };
 
+  const dashboardError = getGroomerDashboardDbLastError();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -169,6 +175,8 @@ export default function GroomerAvailabilityScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={styles.scrollContent}
       >
+        {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchData} /> : null}
+
         {availability.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={64} color={Colors.muted} />

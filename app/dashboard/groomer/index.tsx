@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { GroomerBooking, GroomerReview, GroomerProfile } from '../../../lib/groomer-dashboard-types';
 import {
@@ -30,6 +31,8 @@ import {
   getGroomerReviews,
   getUnreadMessagesCount,
   getGroomerEarnings,
+  getGroomerDashboardDbLastError,
+  clearGroomerDashboardDbLastError,
 } from '../../../lib/groomer-dashboard-db';
 
 const { width } = Dimensions.get('window');
@@ -174,6 +177,7 @@ export default function GroomerDashboardScreen() {
     if (!userId) return;
 
     try {
+      clearGroomerDashboardDbLastError();
       const profileData = await getGroomerProfile(userId);
       
       if (!profileData) {
@@ -227,6 +231,7 @@ export default function GroomerDashboardScreen() {
 
   // Prikaži samo prvih 3 rezervacije na dashboardu
   const displayedBookings = bookings.slice(0, 3);
+  const dashboardError = getGroomerDashboardDbLastError();
 
   if (!profile && !loading) {
     return (
@@ -253,6 +258,8 @@ export default function GroomerDashboardScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
+        {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchData} /> : null}
+
         {/* Header */}
         <View style={styles.header}>
           <View>

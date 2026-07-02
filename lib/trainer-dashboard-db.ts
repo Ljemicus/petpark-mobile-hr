@@ -10,6 +10,43 @@ import type {
   MonthlyEarnings,
 } from './trainer-dashboard-types';
 
+export type TrainerDashboardDbErrorKind = 'network' | 'auth' | 'unknown';
+
+type TrainerDashboardDbLastError = {
+  kind: TrainerDashboardDbErrorKind;
+  message: string;
+  source: string;
+  at: string;
+};
+
+let trainerDashboardDbLastError: TrainerDashboardDbLastError | null = null;
+
+function classifyTrainerDashboardDbError(err: unknown): TrainerDashboardDbErrorKind {
+  const message = err instanceof Error ? err.message.toLowerCase() : String(err ?? '').toLowerCase();
+  if (message.includes('jwt') || message.includes('auth') || message.includes('permission') || message.includes('rls')) return 'auth';
+  if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) return 'network';
+  return 'unknown';
+}
+
+function recordTrainerDashboardDbError(source: string, err: unknown) {
+  const message = err instanceof Error ? err.message : 'Nepoznata greška';
+  trainerDashboardDbLastError = {
+    kind: classifyTrainerDashboardDbError(err),
+    message,
+    source,
+    at: new Date().toISOString(),
+  };
+  console.error(`[trainer-dashboard-db] ${source} failed:`, err);
+}
+
+export function getTrainerDashboardDbLastError() {
+  return trainerDashboardDbLastError;
+}
+
+export function clearTrainerDashboardDbLastError() {
+  trainerDashboardDbLastError = null;
+}
+
 // ─── Trainer Profile ───────────────────────────────────────────────
 
 export async function getTrainerProfile(userId: string): Promise<TrainerProfile | null> {
@@ -23,7 +60,7 @@ export async function getTrainerProfile(userId: string): Promise<TrainerProfile 
     if (error) throw error;
     return data as TrainerProfile;
   } catch (err) {
-    console.error('getTrainerProfile error:', err);
+    recordTrainerDashboardDbError('getTrainerProfile', err);
     return null;
   }
 }
@@ -46,7 +83,7 @@ export async function updateTrainerProfile(
     if (error) throw error;
     return data as TrainerProfile;
   } catch (err) {
-    console.error('updateTrainerProfile error:', err);
+    recordTrainerDashboardDbError('updateTrainerProfile', err);
     return null;
   }
 }
@@ -81,7 +118,7 @@ export async function getTrainerBookings(trainerId: string): Promise<TrainerBook
       program: row.program || undefined,
     }));
   } catch (err) {
-    console.error('getTrainerBookings error:', err);
+    recordTrainerDashboardDbError('getTrainerBookings', err);
     return [];
   }
 }
@@ -99,7 +136,7 @@ export async function updateTrainerBookingStatus(
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('updateTrainerBookingStatus error:', err);
+    recordTrainerDashboardDbError('updateTrainerBookingStatus', err);
     return false;
   }
 }
@@ -120,7 +157,7 @@ export async function getTrainerAvailability(trainerId: string): Promise<Trainer
     if (error) throw error;
     return data || [];
   } catch (err) {
-    console.error('getTrainerAvailability error:', err);
+    recordTrainerDashboardDbError('getTrainerAvailability', err);
     return [];
   }
 }
@@ -138,7 +175,7 @@ export async function addTrainerAvailabilitySlot(
     if (error) throw error;
     return data as TrainerAvailabilitySlot;
   } catch (err) {
-    console.error('addTrainerAvailabilitySlot error:', err);
+    recordTrainerDashboardDbError('addTrainerAvailabilitySlot', err);
     return null;
   }
 }
@@ -153,7 +190,7 @@ export async function deleteTrainerAvailabilitySlot(slotId: string): Promise<boo
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('deleteTrainerAvailabilitySlot error:', err);
+    recordTrainerDashboardDbError('deleteTrainerAvailabilitySlot', err);
     return false;
   }
 }
@@ -172,7 +209,7 @@ export async function deleteTrainerAvailabilityByDay(
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('deleteTrainerAvailabilityByDay error:', err);
+    recordTrainerDashboardDbError('deleteTrainerAvailabilityByDay', err);
     return false;
   }
 }
@@ -224,7 +261,7 @@ export async function generateTrainerSlots(
         .upsert(batch, { onConflict: 'trainer_id,date,start_time' });
       
       if (error) {
-        console.error('Error inserting batch:', error);
+        recordTrainerDashboardDbError('generateTrainerSlots.batch', error);
       } else {
         inserted += batch.length;
       }
@@ -232,7 +269,7 @@ export async function generateTrainerSlots(
 
     return inserted;
   } catch (err) {
-    console.error('generateTrainerSlots error:', err);
+    recordTrainerDashboardDbError('generateTrainerSlots', err);
     return 0;
   }
 }
@@ -253,7 +290,7 @@ export async function getTrainerPrograms(trainerId: string): Promise<TrainingPro
       type: program.type as TrainingProgram['type'],
     }));
   } catch (err) {
-    console.error('getTrainerPrograms error:', err);
+    recordTrainerDashboardDbError('getTrainerPrograms', err);
     return [];
   }
 }
@@ -271,7 +308,7 @@ export async function createTrainingProgram(
     if (error) throw error;
     return data as TrainingProgram;
   } catch (err) {
-    console.error('createTrainingProgram error:', err);
+    recordTrainerDashboardDbError('createTrainingProgram', err);
     return null;
   }
 }
@@ -291,7 +328,7 @@ export async function updateTrainingProgram(
     if (error) throw error;
     return data as TrainingProgram;
   } catch (err) {
-    console.error('updateTrainingProgram error:', err);
+    recordTrainerDashboardDbError('updateTrainingProgram', err);
     return null;
   }
 }
@@ -306,7 +343,7 @@ export async function deleteTrainingProgram(programId: string): Promise<boolean>
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('deleteTrainingProgram error:', err);
+    recordTrainerDashboardDbError('deleteTrainingProgram', err);
     return false;
   }
 }
@@ -342,7 +379,7 @@ export async function getTrainerReviews(trainerId: string): Promise<TrainerRevie
         : undefined,
     }));
   } catch (err) {
-    console.error('getTrainerReviews error:', err);
+    recordTrainerDashboardDbError('getTrainerReviews', err);
     return [];
   }
 }
@@ -420,7 +457,7 @@ export async function getTrainerEarnings(trainerId: string): Promise<{
       completedBookings,
     };
   } catch (err) {
-    console.error('getTrainerEarnings error:', err);
+    recordTrainerDashboardDbError('getTrainerEarnings', err);
     return {
       totalEarnings: 0,
       thisMonthEarnings: 0,
@@ -464,7 +501,7 @@ export async function getUnreadMessagesCount(userId: string): Promise<number> {
         (lastReadByConversation.get(message.conversation_id) || 0)
     ).length;
   } catch (err) {
-    console.error('getUnreadMessagesCount error:', err);
+    recordTrainerDashboardDbError('getUnreadMessagesCount', err);
     return 0;
   }
 }
@@ -530,7 +567,7 @@ export async function getTrainerClients(trainerId: string): Promise<{
       (b.lastBooking || '').localeCompare(a.lastBooking || '')
     );
   } catch (err) {
-    console.error('getTrainerClients error:', err);
+    recordTrainerDashboardDbError('getTrainerClients', err);
     return [];
   }
 }

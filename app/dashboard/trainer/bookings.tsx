@@ -17,12 +17,15 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { TrainerBooking } from '../../../lib/trainer-dashboard-types';
 import { STATUS_COLORS, STATUS_LABELS } from '../../../lib/trainer-dashboard-types';
 import {
   getTrainerBookings,
   updateTrainerBookingStatus,
+  getTrainerDashboardDbLastError,
+  clearTrainerDashboardDbLastError,
 } from '../../../lib/trainer-dashboard-db';
 
 type BookingFilter = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -253,6 +256,7 @@ export default function TrainerBookingsScreen() {
     if (!userId) return;
 
     try {
+      clearTrainerDashboardDbLastError();
       const data = await getTrainerBookings(userId);
       setBookings(data);
     } catch (err) {
@@ -310,6 +314,8 @@ export default function TrainerBookingsScreen() {
     cancelled: bookings.filter((b) => b.status === 'cancelled').length,
   };
 
+  const dashboardError = getTrainerDashboardDbLastError();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -320,6 +326,8 @@ export default function TrainerBookingsScreen() {
         <Text style={styles.headerTitle}>Rezervacije</Text>
         <View style={styles.placeholder} />
       </View>
+
+      {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchBookings} /> : null}
 
       {/* Filters */}
       <View style={styles.filtersContainer}>

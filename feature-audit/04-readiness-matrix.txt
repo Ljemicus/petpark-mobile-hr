@@ -2,7 +2,7 @@ FEATURE                  files screens sb_calls  loading    empty    error  mock
 booking                     14      10        1       10       10       11         0
 chat                         6       4        2        3        3        3         0
 passport                     3       3        1        2        2        2         0
-walk                         5       3        1        3        2        4         0
+walk                         5       3        1        3        3        4         0
 owner-dashboard              2       0        1        0        0        1         0
 sitter-dashboard             4       1        1        1        2        2         0
 groomer-dashboard            2       0        0        0        0        1         0

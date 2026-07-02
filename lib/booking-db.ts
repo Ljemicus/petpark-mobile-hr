@@ -4,6 +4,43 @@ import { supabase } from './supabase';
 import type { Booking, CreateBookingInput, SitterInfo, ServiceType, Availability, Species, PaymentStatus } from './booking-types';
 import { DEFAULT_SERVICE_PRICES, PLATFORM_FEE_PERCENTAGE } from './booking-types';
 
+export type BookingDbErrorKind = 'network' | 'auth' | 'unknown';
+
+type BookingDbLastError = {
+  kind: BookingDbErrorKind;
+  message: string;
+  source: string;
+  at: string;
+};
+
+let bookingDbLastError: BookingDbLastError | null = null;
+
+function classifyBookingDbError(err: unknown): BookingDbErrorKind {
+  const message = err instanceof Error ? err.message.toLowerCase() : String(err ?? '').toLowerCase();
+  if (message.includes('jwt') || message.includes('auth') || message.includes('permission') || message.includes('rls')) return 'auth';
+  if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) return 'network';
+  return 'unknown';
+}
+
+function recordBookingDbError(source: string, err: unknown) {
+  const message = err instanceof Error ? err.message : 'Nepoznata greška';
+  bookingDbLastError = {
+    kind: classifyBookingDbError(err),
+    message,
+    source,
+    at: new Date().toISOString(),
+  };
+  console.error(`[booking-db] ${source} failed:`, err);
+}
+
+export function getBookingDbLastError() {
+  return bookingDbLastError;
+}
+
+export function clearBookingDbLastError() {
+  bookingDbLastError = null;
+}
+
 function asServiceType(value: string | null | undefined): ServiceType {
   const allowed: ServiceType[] = ['boarding', 'walking', 'house-sitting', 'drop-in', 'daycare'];
   return allowed.includes(value as ServiceType) ? (value as ServiceType) : 'boarding';
@@ -106,7 +143,7 @@ export async function createBooking(ownerId: string, input: CreateBookingInput, 
     if (error || !data) throw error;
     return transformBookingData(data);
   } catch (err) {
-    console.error('createBooking error:', err);
+    recordBookingDbError('createBooking', err);
     return null;
   }
 }
@@ -121,7 +158,7 @@ export async function getBookingById(bookingId: string): Promise<Booking | null>
     if (error || !data) throw error;
     return transformBookingData(data);
   } catch (err) {
-    console.error('getBookingById error:', err);
+    recordBookingDbError('getBookingById', err);
     return null;
   }
 }
@@ -136,7 +173,7 @@ export async function cancelBooking(bookingId: string): Promise<boolean> {
     if (error) throw error;
     return true;
   } catch (err) {
-    console.error('cancelBooking error:', err);
+    recordBookingDbError('cancelBooking', err);
     return false;
   }
 }
@@ -157,7 +194,7 @@ export async function getSitterAvailability(sitterId: string, startDate: string,
       available: slot.status !== 'blocked',
     }));
   } catch (err) {
-    console.error('getSitterAvailability error:', err);
+    recordBookingDbError('getSitterAvailability', err);
     return [];
   }
 }
@@ -183,7 +220,7 @@ export async function checkSitterAvailability(sitterId: string, startDate: strin
     if (bookingsError) throw bookingsError;
     return !(bookings && bookings.length > 0);
   } catch (err) {
-    console.error('checkSitterAvailability error:', err);
+    recordBookingDbError('checkSitterAvailability', err);
     return false;
   }
 }
@@ -210,7 +247,7 @@ export async function getSitterForBooking(sitterId: string): Promise<SitterInfo 
       review_count: data.review_count || 0,
     };
   } catch (err) {
-    console.error('getSitterForBooking error:', err);
+    recordBookingDbError('getSitterForBooking', err);
     return null;
   }
 }
@@ -219,7 +256,7 @@ export async function getSitterPrices(sitterId: string): Promise<Record<ServiceT
   try {
     return await getProviderBasePrices(sitterId);
   } catch (err) {
-    console.error('getSitterPrices error:', err);
+    recordBookingDbError('getSitterPrices', err);
     return null;
   }
 }
@@ -240,7 +277,7 @@ export async function getOwnerPets(ownerId: string) {
       photo_url: null,
     }));
   } catch (err) {
-    console.error('getOwnerPets error:', err);
+    recordBookingDbError('getOwnerPets', err);
     return [];
   }
 }

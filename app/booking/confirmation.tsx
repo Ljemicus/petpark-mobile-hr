@@ -18,7 +18,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Colors } from '../../lib/colors';
-import { getBookingByIdWithSitterDetails } from '../../lib/booking-db';
+import InlineErrorState from '../../components/shared/InlineErrorState';
+import {
+  getBookingByIdWithSitterDetails,
+  getBookingDbLastError,
+  clearBookingDbLastError,
+} from '../../lib/booking-db';
 import type { Booking } from '../../lib/booking-types';
 import { SERVICE_LABELS, SERVICE_EMOJI } from '../../lib/booking-types';
 
@@ -34,6 +39,7 @@ export default function BookingConfirmationScreen() {
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Animation values
   const circleScale = useSharedValue(0);
@@ -68,10 +74,15 @@ export default function BookingConfirmationScreen() {
 
   const loadBooking = async () => {
     try {
+      clearBookingDbLastError();
+      setLoadError(null);
       const data = await getBookingByIdWithSitterDetails(bookingId!);
       setBooking(data);
+      const bookingError = getBookingDbLastError();
+      if (bookingError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error loading booking:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -115,6 +126,8 @@ export default function BookingConfirmationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        {loadError ? <InlineErrorState message={loadError} onRetry={loadBooking} /> : null}
+
         {/* Success Animation */}
         <View style={styles.animationContainer}>
           <AnimatedCircle

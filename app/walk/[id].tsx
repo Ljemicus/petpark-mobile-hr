@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
+import InlineErrorState from '../../components/shared/InlineErrorState';
 import type { WalkWithDetails } from '../../lib/walk-types';
 import {
   formatWalkDate,
@@ -22,7 +23,11 @@ import {
   calculateAverageSpeed,
   WALK_STATUS_LABELS,
 } from '../../lib/walk-types';
-import { getWalkById, getWalksForUser } from '../../lib/walk-db';
+import {
+  getWalkById,
+  getWalkDbLastError,
+  clearWalkDbLastError,
+} from '../../lib/walk-db';
 
 // Stat kartica
 function StatCard({
@@ -67,6 +72,7 @@ export default function WalkDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [walk, setWalk] = useState<WalkWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadWalk();
@@ -75,8 +81,12 @@ export default function WalkDetailsScreen() {
   const loadWalk = async () => {
     setLoading(true);
     try {
+      clearWalkDbLastError();
+      setLoadError(null);
       // Prvo pokušaj dohvatiti iz walk by id
       let walkData = await getWalkById(id);
+      const walkError = getWalkDbLastError();
+      if (walkError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
       
       // Ako ne uspije, pokušaj pronaći u listi svih walkova
       if (!walkData) {
@@ -91,6 +101,7 @@ export default function WalkDetailsScreen() {
       }
     } catch (err) {
       console.error('Error loading walk:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -113,6 +124,7 @@ export default function WalkDetailsScreen() {
       <SafeAreaView style={styles.container}>
         <Stack.Screen options={{ title: 'Detalji šetnje' }} />
         <View style={styles.errorContainer}>
+          {loadError ? <InlineErrorState message={loadError} onRetry={loadWalk} /> : null}
           <Ionicons name="alert-circle" size={64} color={Colors.error} />
           <Text style={styles.errorTitle}>Šetnja nije pronađena</Text>
           <Text style={styles.errorText}>
@@ -158,6 +170,8 @@ export default function WalkDetailsScreen() {
       <Stack.Screen options={{ title: 'Detalji šetnje' }} />
 
       <ScrollView style={styles.scrollView}>
+        {loadError ? <InlineErrorState message={loadError} onRetry={loadWalk} /> : null}
+
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity

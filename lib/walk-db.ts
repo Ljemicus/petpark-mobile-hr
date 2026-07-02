@@ -5,6 +5,43 @@ import { supabase } from './supabase';
 import type { Walk, WalkWithDetails } from './walk-types';
 import type { Json } from './database.types';
 
+export type WalkDbErrorKind = 'network' | 'auth' | 'unknown';
+
+type WalkDbLastError = {
+  kind: WalkDbErrorKind;
+  message: string;
+  source: string;
+  at: string;
+};
+
+let walkDbLastError: WalkDbLastError | null = null;
+
+function classifyWalkDbError(err: unknown): WalkDbErrorKind {
+  const message = err instanceof Error ? err.message.toLowerCase() : String(err ?? '').toLowerCase();
+  if (message.includes('jwt') || message.includes('auth') || message.includes('permission') || message.includes('rls')) return 'auth';
+  if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) return 'network';
+  return 'unknown';
+}
+
+function recordWalkDbError(source: string, err: unknown) {
+  const message = err instanceof Error ? err.message : 'Nepoznata greška';
+  walkDbLastError = {
+    kind: classifyWalkDbError(err),
+    message,
+    source,
+    at: new Date().toISOString(),
+  };
+  console.error(`[walk-db] ${source} failed:`, err);
+}
+
+export function getWalkDbLastError() {
+  return walkDbLastError;
+}
+
+export function clearWalkDbLastError() {
+  walkDbLastError = null;
+}
+
 type RemoteWalk = {
   id: string;
   booking_id: string;
@@ -67,9 +104,10 @@ export async function getWalkById(id: string): Promise<Walk | null> {
       .eq('id', id)
       .single();
 
-    if (error || !data) return null;
+    if (error || !data) throw error ?? new Error('Walk nije pronađen');
     return toWalk(data as any);
-  } catch {
+  } catch (err) {
+    recordWalkDbError('getWalkById', err);
     return null;
   }
 }
@@ -83,9 +121,10 @@ export async function getWalksForUser(userId: string): Promise<WalkWithDetails[]
       .or(`provider_id.eq.${userId},owner_profile_id.eq.${userId}`)
       .order('started_at', { ascending: false });
 
-    if (error || !data) return [];
+    if (error || !data) throw error ?? new Error('Walkovi nisu pronađeni');
     return (data as any[]).map(toWalk);
-  } catch {
+  } catch (err) {
+    recordWalkDbError('getWalksForUser', err);
     return [];
   }
 }
@@ -100,9 +139,10 @@ export async function getActiveWalksForSitter(sitterId: string): Promise<WalkWit
       .eq('status', 'active')
       .order('started_at', { ascending: false });
 
-    if (error || !data) return [];
+    if (error || !data) throw error ?? new Error('Aktivne šetnje nisu pronađene');
     return (data as any[]).map(toWalk);
-  } catch {
+  } catch (err) {
+    recordWalkDbError('getActiveWalksForSitter', err);
     return [];
   }
 }
@@ -116,9 +156,10 @@ export async function getWalksByBooking(bookingId: string): Promise<WalkWithDeta
       .eq('booking_id', bookingId)
       .order('started_at', { ascending: false });
 
-    if (error || !data) return [];
+    if (error || !data) throw error ?? new Error('Šetnje za booking nisu pronađene');
     return (data as any[]).map(toWalk);
-  } catch {
+  } catch (err) {
+    recordWalkDbError('getWalksByBooking', err);
     return [];
   }
 }
@@ -132,7 +173,7 @@ export async function createWalk(walk: Omit<Walk, 'id' | 'created_at'>): Promise
       .eq('id', walk.booking_id)
       .single();
 
-    if (bookingError || !booking) return null;
+    if (bookingError || !booking) throw bookingError ?? new Error('Booking za šetnju nije pronađen');
 
     const { data, error } = await supabase
       .from('walks')
@@ -150,10 +191,10 @@ export async function createWalk(walk: Omit<Walk, 'id' | 'created_at'>): Promise
       .select(WALK_SELECT)
       .single();
 
-    if (error || !data) return null;
+    if (error || !data) throw error ?? new Error('Šetnja nije kreirana');
     return toWalk(data as any);
   } catch (err) {
-    console.error('Exception creating walk:', err);
+    recordWalkDbError('createWalk', err);
     return null;
   }
 }
@@ -173,9 +214,10 @@ export async function updateWalk(walkId: string, updates: Partial<Walk>): Promis
     );
 
     const { error } = await supabase.from('walks').update(cleanUpdates).eq('id', walkId);
-    return !error;
+    if (error) throw error;
+    return true;
   } catch (err) {
-    console.error('Exception updating walk:', err);
+    recordWalkDbError('updateWalk', err);
     return false;
   }
 }
@@ -201,9 +243,10 @@ export async function endWalk(
       })
       .eq('id', walkId);
 
-    return !error;
+    if (error) throw error;
+    return true;
   } catch (err) {
-    console.error('Exception ending walk:', err);
+    recordWalkDbError('endWalk', err);
     return false;
   }
 }
@@ -220,7 +263,7 @@ export async function getAvailableBookingsForWalk(sitterId: string): Promise<any
       .lte('starts_at', today)
       .gte('ends_at', today);
 
-    if (error || !data) return [];
+    if (error || !data) throw error ?? new Error('Nema dostupnih bookinga za šetnju');
     return data.map((booking: any) => ({
       id: booking.id,
       pet_id: booking.pet_id,
@@ -228,7 +271,8 @@ export async function getAvailableBookingsForWalk(sitterId: string): Promise<any
       start_date: booking.starts_at,
       end_date: booking.ends_at,
     }));
-  } catch {
+  } catch (err) {
+    recordWalkDbError('getAvailableBookingsForWalk', err);
     return [];
   }
 }

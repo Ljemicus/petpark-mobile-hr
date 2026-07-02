@@ -13,9 +13,15 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../lib/colors';
+import InlineErrorState from '../../components/shared/InlineErrorState';
 import { supabase } from '../../lib/supabase';
 import { ConversationState, Message } from '../../lib/chat/types';
-import { getConversations, markMessagesAsRead } from '../../lib/chat/db';
+import {
+  getConversations,
+  markMessagesAsRead,
+  getChatDbLastError,
+  clearChatDbLastError,
+} from '../../lib/chat/db';
 import { useRealtimeMessages } from '../../lib/chat/realtime';
 import { upsertConversation, formatMessageTime } from '../../lib/chat/utils';
 
@@ -79,6 +85,7 @@ export default function ChatListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Dohvati trenutnog korisnika
   useEffect(() => {
@@ -94,10 +101,15 @@ export default function ChatListScreen() {
     if (!userId) return;
     
     try {
+      clearChatDbLastError();
+      setLoadError(null);
       const convs = await getConversations(userId);
       setConversations(convs);
+      const chatError = getChatDbLastError();
+      if (chatError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (error) {
       console.error('Error loading conversations:', error);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -177,6 +189,8 @@ export default function ChatListScreen() {
           <Ionicons name="create-outline" size={24} color={Colors.primary} />
         </TouchableOpacity>
       </View>
+
+      {loadError ? <InlineErrorState message={loadError} onRetry={loadConversations} /> : null}
 
       {conversations.length === 0 ? (
         <View style={styles.emptyContainer}>

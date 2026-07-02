@@ -12,6 +12,43 @@ import type {
   MonthlyEarnings,
 } from './groomer-dashboard-types';
 
+export type GroomerDashboardDbErrorKind = 'network' | 'auth' | 'unknown';
+
+type GroomerDashboardDbLastError = {
+  kind: GroomerDashboardDbErrorKind;
+  message: string;
+  source: string;
+  at: string;
+};
+
+let groomerDashboardDbLastError: GroomerDashboardDbLastError | null = null;
+
+function classifyGroomerDashboardDbError(err: unknown): GroomerDashboardDbErrorKind {
+  const message = err instanceof Error ? err.message.toLowerCase() : String(err ?? '').toLowerCase();
+  if (message.includes('jwt') || message.includes('auth') || message.includes('permission') || message.includes('rls')) return 'auth';
+  if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) return 'network';
+  return 'unknown';
+}
+
+function recordGroomerDashboardDbError(source: string, err: unknown) {
+  const message = err instanceof Error ? err.message : 'Nepoznata greška';
+  groomerDashboardDbLastError = {
+    kind: classifyGroomerDashboardDbError(err),
+    message,
+    source,
+    at: new Date().toISOString(),
+  };
+  console.error(`[groomer-dashboard-db] ${source} failed:`, err);
+}
+
+export function getGroomerDashboardDbLastError() {
+  return groomerDashboardDbLastError;
+}
+
+export function clearGroomerDashboardDbLastError() {
+  groomerDashboardDbLastError = null;
+}
+
 export async function getGroomerProfile(userId: string): Promise<GroomerProfile | null> {
   try {
     const { data, error } = await supabase
@@ -21,7 +58,7 @@ export async function getGroomerProfile(userId: string): Promise<GroomerProfile 
       .eq('provider_kind', 'groomer')
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error || !data) throw error ?? new Error('Groomer profil nije pronađen');
     const settings = Array.isArray((data as any).provider_groomer_settings)
       ? (data as any).provider_groomer_settings[0]
       : (data as any).provider_groomer_settings;
@@ -44,7 +81,7 @@ export async function getGroomerProfile(userId: string): Promise<GroomerProfile 
       working_hours: (settings?.working_hours_json as GroomerProfile['working_hours']) || null,
     };
   } catch (err) {
-    console.error('getGroomerProfile error:', err);
+    recordGroomerDashboardDbError('getGroomerProfile', err);
     return null;
   }
 }
@@ -69,7 +106,7 @@ export async function updateGroomerProfile(
     if (error) throw error;
     return null;
   } catch (err) {
-    console.error('updateGroomerProfile error:', err);
+    recordGroomerDashboardDbError('updateGroomerProfile', err);
     return null;
   }
 }
@@ -141,7 +178,7 @@ export async function getGroomerReviews(groomerId: string): Promise<GroomerRevie
         : undefined,
     }));
   } catch (err) {
-    console.error('getGroomerReviews error:', err);
+    recordGroomerDashboardDbError('getGroomerReviews', err);
     return [];
   }
 }

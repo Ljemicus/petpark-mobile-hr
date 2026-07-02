@@ -5,10 +5,50 @@ import {
   getMessagesForConversation,
   sendMessage as sendOwnerMessage,
   markMessagesAsRead as markOwnerMessagesAsRead,
+  getOwnerDashboardLastError,
 } from '../owner-dashboard-db';
+
+export type ChatDbErrorKind = 'network' | 'auth' | 'unknown';
+
+type ChatDbLastError = {
+  kind: ChatDbErrorKind;
+  message: string;
+  source: string;
+  at: string;
+};
+
+let chatDbLastError: ChatDbLastError | null = null;
+
+function classifyChatDbError(err: unknown): ChatDbErrorKind {
+  const message = err instanceof Error ? err.message.toLowerCase() : String(err ?? '').toLowerCase();
+  if (message.includes('jwt') || message.includes('auth') || message.includes('permission') || message.includes('rls')) return 'auth';
+  if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) return 'network';
+  return 'unknown';
+}
+
+function recordChatDbError(source: string, err: unknown) {
+  const message = err instanceof Error ? err.message : 'Nepoznata greška';
+  chatDbLastError = {
+    kind: classifyChatDbError(err),
+    message,
+    source,
+    at: new Date().toISOString(),
+  };
+  console.error(`[chat-db] ${source} failed:`, err);
+}
+
+export function getChatDbLastError() {
+  return chatDbLastError;
+}
+
+export function clearChatDbLastError() {
+  chatDbLastError = null;
+}
 
 export async function getConversations(userId: string): Promise<ConversationState[]> {
   const summaries = await getConversationSummaries(userId);
+  const ownerError = getOwnerDashboardLastError();
+  if (ownerError) recordChatDbError('getConversations', new Error(ownerError.message));
   return summaries.map((summary) => ({
     partnerId: summary.partnerId,
     partnerName: summary.partnerName,
@@ -23,7 +63,10 @@ export async function getConversationMessages(
   userId: string,
   partnerId: string
 ): Promise<Message[]> {
-  return (await getMessagesForConversation(userId, partnerId)) as Message[];
+  const messages = (await getMessagesForConversation(userId, partnerId)) as Message[];
+  const ownerError = getOwnerDashboardLastError();
+  if (ownerError) recordChatDbError('getConversationMessages', new Error(ownerError.message));
+  return messages;
 }
 
 export async function sendMessage(
@@ -33,7 +76,7 @@ export async function sendMessage(
   bookingId?: string | null,
   imageUrl?: string | null
 ): Promise<Message | null> {
-  return (await sendOwnerMessage({
+  const message = (await sendOwnerMessage({
     sender_id: senderId,
     receiver_id: receiverId,
     booking_id: bookingId ?? null,
@@ -41,10 +84,15 @@ export async function sendMessage(
     image_url: imageUrl ?? null,
     read: false,
   })) as Message | null;
+  const ownerError = getOwnerDashboardLastError();
+  if (ownerError) recordChatDbError('sendMessage', new Error(ownerError.message));
+  return message;
 }
 
 export async function markMessagesAsRead(userId: string, partnerId: string): Promise<void> {
   await markOwnerMessagesAsRead(userId, partnerId);
+  const ownerError = getOwnerDashboardLastError();
+  if (ownerError) recordChatDbError('markMessagesAsRead', new Error(ownerError.message));
 }
 
 export async function searchUsers(query: string, currentUserId: string): Promise<ChatUser[]> {
@@ -64,7 +112,7 @@ export async function searchUsers(query: string, currentUserId: string): Promise
       role: 'owner',
     }));
   } catch (error) {
-    console.error('Error searching users:', error);
+    recordChatDbError('searchUsers', error);
     return [];
   }
 }
@@ -85,7 +133,7 @@ export async function getUserById(userId: string): Promise<ChatUser | null> {
       role: 'owner',
     };
   } catch (error) {
-    console.error('Error getting user:', error);
+    recordChatDbError('getUserById', error);
     return null;
   }
 }

@@ -18,6 +18,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { TrainingProgram } from '../../../lib/trainer-dashboard-types';
 import { TRAINING_TYPE_LABELS, CITIES } from '../../../lib/trainer-dashboard-types';
@@ -27,6 +28,8 @@ import {
   createTrainingProgram,
   updateTrainingProgram,
   deleteTrainingProgram,
+  getTrainerDashboardDbLastError,
+  clearTrainerDashboardDbLastError,
 } from '../../../lib/trainer-dashboard-db';
 
 // Program card komponenta
@@ -326,6 +329,7 @@ export default function TrainerProgramsScreen() {
     if (!userId) return;
 
     try {
+      clearTrainerDashboardDbLastError();
       const [profileData, programsData] = await Promise.all([
         getTrainerProfile(userId),
         getTrainerPrograms(userId),
@@ -396,6 +400,8 @@ export default function TrainerProgramsScreen() {
     );
   };
 
+  const dashboardError = getTrainerDashboardDbLastError();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -415,6 +421,8 @@ export default function TrainerProgramsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchData} /> : null}
+
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.primary} />

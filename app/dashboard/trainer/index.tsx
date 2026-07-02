@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../lib/colors';
+import InlineErrorState from '../../../components/shared/InlineErrorState';
 import { useAuth } from '../../../lib/auth-context';
 import type { TrainerProfile, TrainerBooking, TrainingProgram } from '../../../lib/trainer-dashboard-types';
 import { TRAINING_TYPE_LABELS, STATUS_COLORS, STATUS_LABELS } from '../../../lib/trainer-dashboard-types';
@@ -24,6 +25,8 @@ import {
   getTrainerBookings,
   getTrainerPrograms,
   getUnreadMessagesCount,
+  getTrainerDashboardDbLastError,
+  clearTrainerDashboardDbLastError,
 } from '../../../lib/trainer-dashboard-db';
 
 const { width } = Dimensions.get('window');
@@ -176,6 +179,7 @@ export default function TrainerDashboardScreen() {
     if (!userId) return;
 
     try {
+      clearTrainerDashboardDbLastError();
       const [profileData, bookingsData, programsData, unreadData] = await Promise.all([
         getTrainerProfile(userId),
         getTrainerBookings(userId),
@@ -215,12 +219,16 @@ export default function TrainerDashboardScreen() {
   const displayedBookings = bookings.slice(0, 3);
   const displayedPrograms = programs.slice(0, 3);
 
+  const dashboardError = getTrainerDashboardDbLastError();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
+        {dashboardError ? <InlineErrorState message="Ne možemo učitati podatke. Povuci za osvježavanje." onRetry={fetchData} /> : null}
+
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>

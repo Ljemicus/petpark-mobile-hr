@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/colors';
 import { useAuth } from '../../lib/auth-context';
+import InlineErrorState from '../../components/shared/InlineErrorState';
 import type { Booking, BookingStatus } from '../../lib/booking-types';
 import {
   SERVICE_LABELS,
@@ -28,6 +29,8 @@ import {
 import {
   getBookingByIdWithSitterDetails,
   cancelBooking,
+  getBookingDbLastError,
+  clearBookingDbLastError,
 } from '../../lib/booking-db';
 
 export default function BookingDetailScreen() {
@@ -38,6 +41,7 @@ export default function BookingDetailScreen() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadBooking();
@@ -46,10 +50,15 @@ export default function BookingDetailScreen() {
   const loadBooking = async () => {
     try {
       setLoading(true);
+      clearBookingDbLastError();
+      setLoadError(null);
       const data = await getBookingByIdWithSitterDetails(id!);
       setBooking(data);
+      const bookingError = getBookingDbLastError();
+      if (bookingError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } catch (err) {
       console.error('Error loading booking:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
       Alert.alert('Greška', 'Nije moguće učitati detalje rezervacije');
     } finally {
       setLoading(false);
@@ -143,6 +152,7 @@ export default function BookingDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
+          {loadError ? <InlineErrorState message={loadError} onRetry={loadBooking} /> : null}
           <Ionicons name="alert-circle" size={64} color={Colors.error} />
           <Text style={styles.errorTitle}>Rezervacija nije pronađena</Text>
           <Text style={styles.errorText}>
@@ -175,6 +185,8 @@ export default function BookingDetailScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {loadError ? <InlineErrorState message={loadError} onRetry={loadBooking} /> : null}
+
         {/* Status Banner */}
         <View style={[styles.statusBanner, { backgroundColor: statusColors.bg }]}>
           <View style={styles.statusRow}>

@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { Colors } from '../../lib/colors';
 import { useAuth } from '../../lib/auth-context';
+import InlineErrorState from '../../components/shared/InlineErrorState';
 import type { Walk, WalkCheckpoint } from '../../lib/walk-types';
 import {
   formatWalkDuration,
@@ -34,6 +35,8 @@ import {
   getWalkById,
   subscribeToWalk,
   unsubscribeFromWalk,
+  getWalkDbLastError,
+  clearWalkDbLastError,
 } from '../../lib/walk-db';
 
 type WalkState = 'idle' | 'active' | 'paused' | 'finished';
@@ -320,6 +323,7 @@ export default function ActiveWalkScreen() {
   const [loading, setLoading] = useState(true);
   const [locationPermission, setLocationPermission] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
@@ -367,13 +371,18 @@ export default function ActiveWalkScreen() {
   const loadAvailableBookings = async () => {
     setLoading(true);
     try {
+      clearWalkDbLastError();
+      setLoadError(null);
       const bookings = await getAvailableBookingsForWalk(user!.id);
       setAvailableBookings(bookings);
+      const walkError = getWalkDbLastError();
+      if (walkError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
       if (bookings.length > 0) {
         setSelectedBookingId(bookings[0].id);
       }
     } catch (err) {
       console.error('Error loading bookings:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -382,7 +391,11 @@ export default function ActiveWalkScreen() {
   const loadExistingWalk = async (id: string) => {
     setLoading(true);
     try {
+      clearWalkDbLastError();
+      setLoadError(null);
       const walk = await getWalkById(id);
+      const walkError = getWalkDbLastError();
+      if (walkError) setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
       if (walk) {
         setCurrentWalkId(walk.id);
         setRoutePoints(walk.route.map((r) => ({ ...r, timestamp: Date.now() })));
@@ -408,6 +421,7 @@ export default function ActiveWalkScreen() {
       }
     } catch (err) {
       console.error('Error loading walk:', err);
+      setLoadError('Ne možemo učitati podatke. Povuci za osvježavanje.');
     } finally {
       setLoading(false);
     }
@@ -663,6 +677,13 @@ export default function ActiveWalkScreen() {
       />
 
       <ScrollView style={styles.scrollView}>
+        {loadError ? (
+          <InlineErrorState
+            message={loadError}
+            onRetry={() => (existingWalkId ? loadExistingWalk(existingWalkId) : loadAvailableBookings())}
+          />
+        ) : null}
+
         {/* Status Badge */}
         {walkState !== 'idle' && (
           <View style={styles.statusContainer}>
