@@ -2,5 +2,6 @@ app/chat/[userId].tsx
 app/chat/_layout.tsx
 app/chat/index.tsx
 app/chat/new-chat.tsx
+app/dashboard/breeder/chat.tsx
 lib/chat/db.ts
 lib/chat/types.ts

@@ -21,6 +21,7 @@ app/chat/index.tsx
 app/chat/new-chat.tsx
 app/dashboard/breeder/_layout.tsx
 app/dashboard/breeder/applications.tsx
+app/dashboard/breeder/chat.tsx
 app/dashboard/breeder/documents.tsx
 app/dashboard/breeder/earnings.tsx
 app/dashboard/breeder/index.tsx

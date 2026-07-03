@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from './domain-types';
 import { supabase } from './supabase';
+import { captureAppError } from './sentry';
 import type { Session } from '@supabase/supabase-js';
 
 type OnboardingData = {
@@ -188,9 +189,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { success: true };
     } catch (err: any) {
-      const message = err?.message ?? 'Onboarding nije spremljen. Provjeri internet vezu i pokušaj ponovno.';
-      console.warn('completeOnboarding: Supabase save failed:', message);
-      return { success: false, error: message };
+      captureAppError('auth.completeOnboarding', err, { role: data.role, city: data.city });
+      const internalMessage = err?.message ?? String(err ?? 'unknown');
+      console.warn('completeOnboarding: Supabase save failed:', internalMessage);
+      return { success: false, error: 'Spremanje nije uspjelo. Provjeri vezu i pokušaj ponovno.' };
     }
   };
 

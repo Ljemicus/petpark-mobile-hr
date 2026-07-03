@@ -1,6 +1,6 @@
 # KIT-E E.5 — Sentry React Native Setup
 
-Datum: 2026-07-02
+Datum: 2026-07-03
 Branch: `fix/kit-e-mobile-istina`
 
 ## Što je napravljeno
@@ -17,6 +17,7 @@ Branch: `fix/kit-e-mobile-istina`
   - groomer dashboard DB
   - trainer dashboard DB
   - walk DB
+  - auth onboarding save failure (`completeOnboarding`)
 
 ## Fail-closed pravilo
 

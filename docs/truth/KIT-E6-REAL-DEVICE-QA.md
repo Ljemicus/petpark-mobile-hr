@@ -1,6 +1,6 @@
 # KIT-E E.6 — Real Device QA Runbook
 
-Datum: 2026-07-02
+Datum: 2026-07-03
 Branch: `fix/kit-e-mobile-istina`
 
 ## Status
@@ -65,7 +65,7 @@ Razlog: E.6 traži stvarni iOS/Android uređaj ili dogovoreni test build + test 
 - `npx tsc --noEmit` — PASS
 - `npx expo-doctor` — 19/19 PASS
 - `bash scripts/audit-features.sh` — tsc errors 0, nav orphans 0
-- `node scripts/check-booking-requests-bearer.mjs` — PASS
+- `node scripts/check-booking-requests-bearer.mjs` — PASS (2026-07-03)
 
 ## npm audit note
 
