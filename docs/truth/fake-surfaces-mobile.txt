@@ -1,5 +1,2 @@
-lib/shop.ts:67:const FALLBACK_PRODUCTS: Product[] = [
-lib/shop.ts:116:const FALLBACK_REVIEWS: ProductReview[] = [
-lib/shop.ts:149:  return FALLBACK_PRODUCTS;
-lib/shop.ts:153:  return FALLBACK_PRODUCTS.find((product) => product.slug === slug) ?? null;
-lib/shop.ts:157:  return FALLBACK_REVIEWS.filter((review) => review.productId === productId);
+# Mobile fake surface grep — 2026-07-03
+
