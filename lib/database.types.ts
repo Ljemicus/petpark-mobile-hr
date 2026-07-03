@@ -14,6 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          applicant_profile_id: string
+          created_at: string
+          id: string
+          message: string | null
+          publisher_id: string
+          puppy_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_profile_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          publisher_id: string
+          puppy_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_profile_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          publisher_id?: string
+          puppy_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_applicant_profile_id_fkey"
+            columns: ["applicant_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_publisher_id_fkey"
+            columns: ["publisher_id"]
+            isOneToOne: false
+            referencedRelation: "publisher_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_puppy_id_fkey"
+            columns: ["puppy_id"]
+            isOneToOne: false
+            referencedRelation: "puppies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       availability_slots: {
         Row: {
           created_at: string
@@ -399,6 +454,131 @@ export type Database = {
           },
         ]
       }
+      breeder_documents: {
+        Row: {
+          document_type: string | null
+          id: string
+          publisher_id: string
+          status: string
+          storage_path: string
+          uploaded_at: string
+        }
+        Insert: {
+          document_type?: string | null
+          id?: string
+          publisher_id: string
+          status?: string
+          storage_path: string
+          uploaded_at?: string
+        }
+        Update: {
+          document_type?: string | null
+          id?: string
+          publisher_id?: string
+          status?: string
+          storage_path?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "breeder_documents_publisher_id_fkey"
+            columns: ["publisher_id"]
+            isOneToOne: false
+            referencedRelation: "publisher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      breeder_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          publisher_id: string
+          rating: number
+          reviewer_profile_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          publisher_id: string
+          rating: number
+          reviewer_profile_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          publisher_id?: string
+          rating?: number
+          reviewer_profile_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "breeder_reviews_publisher_id_fkey"
+            columns: ["publisher_id"]
+            isOneToOne: false
+            referencedRelation: "publisher_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "breeder_reviews_reviewer_profile_id_fkey"
+            columns: ["reviewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          updated_at: string
+          user_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity: number
+          updated_at?: string
+          user_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+          user_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_user_profile_id_fkey"
+            columns: ["user_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
@@ -473,6 +653,205 @@ export type Database = {
             columns: ["created_by_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_comments: {
+        Row: {
+          author_gradient: string
+          author_initial: string
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          likes: number
+          status: string
+          topic_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          author_gradient?: string
+          author_initial?: string
+          author_name?: string
+          content: string
+          created_at?: string
+          id?: string
+          likes?: number
+          status?: string
+          topic_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          author_gradient?: string
+          author_initial?: string
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          likes?: number
+          status?: string
+          topic_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_comments_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_topics: {
+        Row: {
+          author_gradient: string
+          author_initial: string
+          author_name: string
+          body: string | null
+          category_slug: string
+          comment_count: number
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          is_hot: boolean
+          is_pinned: boolean
+          is_solved: boolean
+          likes: number
+          status: string
+          title: string
+          updated_at: string
+          user_id: string | null
+          view_count: number
+        }
+        Insert: {
+          author_gradient?: string
+          author_initial?: string
+          author_name?: string
+          body?: string | null
+          category_slug: string
+          comment_count?: number
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_hot?: boolean
+          is_pinned?: boolean
+          is_solved?: boolean
+          likes?: number
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number
+        }
+        Update: {
+          author_gradient?: string
+          author_initial?: string
+          author_name?: string
+          body?: string | null
+          category_slug?: string
+          comment_count?: number
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_hot?: boolean
+          is_pinned?: boolean
+          is_solved?: boolean
+          likes?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_topics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      litters: {
+        Row: {
+          available_count: number
+          birth_date: string | null
+          breed: string
+          breeder_id: string
+          created_at: string
+          description: string | null
+          expected_date: string | null
+          fci_registered: boolean
+          id: string
+          images: string[]
+          price_from: number
+          price_to: number
+          reserved_count: number
+          sold_count: number
+          species: string
+          status: string
+          total_puppies: number
+          updated_at: string
+        }
+        Insert: {
+          available_count?: number
+          birth_date?: string | null
+          breed: string
+          breeder_id: string
+          created_at?: string
+          description?: string | null
+          expected_date?: string | null
+          fci_registered?: boolean
+          id?: string
+          images?: string[]
+          price_from?: number
+          price_to?: number
+          reserved_count?: number
+          sold_count?: number
+          species?: string
+          status?: string
+          total_puppies?: number
+          updated_at?: string
+        }
+        Update: {
+          available_count?: number
+          birth_date?: string | null
+          breed?: string
+          breeder_id?: string
+          created_at?: string
+          description?: string | null
+          expected_date?: string | null
+          fci_registered?: boolean
+          id?: string
+          images?: string[]
+          price_from?: number
+          price_to?: number
+          reserved_count?: number
+          sold_count?: number
+          species?: string
+          status?: string
+          total_puppies?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "litters_breeder_id_fkey"
+            columns: ["breeder_id"]
+            isOneToOne: false
+            referencedRelation: "publisher_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -705,6 +1084,106 @@ export type Database = {
           },
         ]
       }
+      pet_appointments: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          pet_id: string
+          provider_name: string | null
+          status: string
+          time: string | null
+          title: string
+          type: string
+          updated_at: string
+          vet_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          pet_id: string
+          provider_name?: string | null
+          status?: string
+          time?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+          vet_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          provider_name?: string | null
+          status?: string
+          time?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          vet_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_appointments_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pet_documents: {
+        Row: {
+          created_at: string
+          document_type: string | null
+          id: string
+          name: string | null
+          pet_id: string
+          storage_path: string | null
+          title: string | null
+          type: string | null
+          uploaded_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_type?: string | null
+          id?: string
+          name?: string | null
+          pet_id: string
+          storage_path?: string | null
+          title?: string | null
+          type?: string | null
+          uploaded_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_type?: string | null
+          id?: string
+          name?: string | null
+          pet_id?: string
+          storage_path?: string | null
+          title?: string | null
+          type?: string | null
+          uploaded_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_documents_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pet_passports: {
         Row: {
           created_at: string
@@ -742,6 +1221,77 @@ export type Database = {
             columns: ["pet_id"]
             isOneToOne: true
             referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pet_updates: {
+        Row: {
+          booking_id: string | null
+          caption: string
+          created_at: string
+          emoji: string
+          id: string
+          pet_id: string | null
+          photo_url: string | null
+          provider_id: string | null
+          sitter_id: string | null
+          type: string | null
+          update_type: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          caption?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          pet_id?: string | null
+          photo_url?: string | null
+          provider_id?: string | null
+          sitter_id?: string | null
+          type?: string | null
+          update_type?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          caption?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          pet_id?: string | null
+          photo_url?: string | null
+          provider_id?: string | null
+          sitter_id?: string | null
+          type?: string | null
+          update_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_updates_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_updates_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_updates_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_updates_sitter_id_fkey"
+            columns: ["sitter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -813,6 +1363,117 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      product_reviews: {
+        Row: {
+          author_name: string
+          comment: string | null
+          created_at: string
+          id: string
+          product_id: string
+          rating: number
+          reviewer_profile_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          rating: number
+          reviewer_profile_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          rating?: number
+          reviewer_profile_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_reviewer_profile_id_fkey"
+            columns: ["reviewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          brand: string | null
+          category: string
+          created_at: string
+          description: string | null
+          emoji: string
+          id: string
+          in_stock: boolean
+          name: string
+          original_price: number | null
+          price: number
+          rating: number
+          review_count: number
+          slug: string
+          specs: Json
+          status: string
+          updated_at: string
+          variants: Json
+        }
+        Insert: {
+          brand?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          emoji?: string
+          id?: string
+          in_stock?: boolean
+          name: string
+          original_price?: number | null
+          price: number
+          rating?: number
+          review_count?: number
+          slug: string
+          specs?: Json
+          status?: string
+          updated_at?: string
+          variants?: Json
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          emoji?: string
+          id?: string
+          in_stock?: boolean
+          name?: string
+          original_price?: number | null
+          price?: number
+          rating?: number
+          review_count?: number
+          slug?: string
+          specs?: Json
+          status?: string
+          updated_at?: string
+          variants?: Json
+        }
+        Relationships: []
       }
       profile_roles: {
         Row: {
@@ -1135,6 +1796,240 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publisher_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          breeds: string[]
+          certified: boolean
+          city: string | null
+          created_at: string
+          display_name: string
+          fci_registered: boolean
+          id: string
+          is_onboarded: boolean
+          phone: string | null
+          profile_completeness_pct: number
+          species: string[]
+          type: string
+          updated_at: string
+          user_id: string
+          verification_status: string
+          verified: boolean
+          years_experience: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          breeds?: string[]
+          certified?: boolean
+          city?: string | null
+          created_at?: string
+          display_name: string
+          fci_registered?: boolean
+          id?: string
+          is_onboarded?: boolean
+          phone?: string | null
+          profile_completeness_pct?: number
+          species?: string[]
+          type: string
+          updated_at?: string
+          user_id: string
+          verification_status?: string
+          verified?: boolean
+          years_experience?: number
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          breeds?: string[]
+          certified?: boolean
+          city?: string | null
+          created_at?: string
+          display_name?: string
+          fci_registered?: boolean
+          id?: string
+          is_onboarded?: boolean
+          phone?: string | null
+          profile_completeness_pct?: number
+          species?: string[]
+          type?: string
+          updated_at?: string
+          user_id?: string
+          verification_status?: string
+          verified?: boolean
+          years_experience?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publisher_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      puppies: {
+        Row: {
+          created_at: string
+          id: string
+          litter_id: string
+          name: string | null
+          photos: Json
+          price: number | null
+          sex: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          litter_id: string
+          name?: string | null
+          photos?: Json
+          price?: number | null
+          sex?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          litter_id?: string
+          name?: string | null
+          photos?: Json
+          price?: number | null
+          sex?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "puppies_litter_id_fkey"
+            columns: ["litter_id"]
+            isOneToOne: false
+            referencedRelation: "litters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rescue_appeals: {
+        Row: {
+          applicant_profile_id: string | null
+          body: string | null
+          created_at: string
+          donation_url: string | null
+          goal_cents: number | null
+          id: string
+          image_url: string | null
+          listing_id: string | null
+          message: string | null
+          raised_cents: number
+          slug: string | null
+          status: string
+          summary: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          applicant_profile_id?: string | null
+          body?: string | null
+          created_at?: string
+          donation_url?: string | null
+          goal_cents?: number | null
+          id?: string
+          image_url?: string | null
+          listing_id?: string | null
+          message?: string | null
+          raised_cents?: number
+          slug?: string | null
+          status?: string
+          summary?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applicant_profile_id?: string | null
+          body?: string | null
+          created_at?: string
+          donation_url?: string | null
+          goal_cents?: number | null
+          id?: string
+          image_url?: string | null
+          listing_id?: string | null
+          message?: string | null
+          raised_cents?: number
+          slug?: string | null
+          status?: string
+          summary?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rescue_appeals_applicant_profile_id_fkey"
+            columns: ["applicant_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rescue_appeals_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "rescue_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rescue_listings: {
+        Row: {
+          city: string | null
+          created_at: string
+          description: string | null
+          id: string
+          pet_name: string
+          photos: Json
+          publisher_id: string
+          species: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          pet_name: string
+          photos?: Json
+          publisher_id: string
+          species: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          pet_name?: string
+          photos?: Json
+          publisher_id?: string
+          species?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rescue_listings_publisher_id_fkey"
+            columns: ["publisher_id"]
+            isOneToOne: false
+            referencedRelation: "publisher_profiles"
             referencedColumns: ["id"]
           },
         ]
