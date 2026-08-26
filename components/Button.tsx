@@ -13,12 +13,28 @@ interface ButtonProps {
 }
 
 export default function Button({ title, onPress, variant = 'primary', size = 'medium', style, textStyle, disabled }: ButtonProps) {
+  const containerVariantStyle = {
+    primary: styles.primary,
+    outline: styles.outline,
+    ghost: styles.ghost,
+  }[variant];
+  const containerSizeStyle = {
+    small: styles.smallSize,
+    medium: styles.mediumSize,
+    large: styles.largeSize,
+  }[size];
+  const variantTextStyle = {
+    primary: styles.primaryText,
+    outline: styles.outlineText,
+    ghost: styles.ghostText,
+  }[variant];
+
   return (
     <TouchableOpacity
       style={[
         styles.base,
-        styles[variant],
-        styles[`${size}Size` as keyof typeof styles],
+        containerVariantStyle,
+        containerSizeStyle,
         disabled && styles.disabled,
         style,
       ]}
@@ -26,7 +42,7 @@ export default function Button({ title, onPress, variant = 'primary', size = 'me
       disabled={disabled}
       activeOpacity={0.7}
     >
-      <Text style={[styles.text, styles[`${variant}Text` as keyof typeof styles], textStyle]}>
+      <Text style={[styles.text, variantTextStyle, textStyle]}>
         {title}
       </Text>
     </TouchableOpacity>
